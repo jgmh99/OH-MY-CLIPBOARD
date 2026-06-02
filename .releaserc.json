@@ -6,7 +6,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm version --no-git-tag-version ${nextRelease.version} && npm run dist"
+        "prepareCmd": "npm version --no-git-tag-version --allow-same-version ${nextRelease.version} && npm run dist"
       }
     ],
     [
