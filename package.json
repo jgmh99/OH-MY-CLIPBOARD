@@ -1,0 +1,23 @@
+{
+  "name": "oh-my-clipboard",
+  "version": "1.0.0",
+  "description": "A macOS menu bar clipboard history app.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "start": "electron .",
+    "dist": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "latest",
+    "electron-builder": "latest"
+  },
+  "build": {
+    "appId": "com.ohmyclipboard.app",
+    "productName": "Oh My Clipboard",
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.utilities"
+    }
+  }
+}
