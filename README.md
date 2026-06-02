@@ -34,12 +34,7 @@ npm run dist
 
 PR에서는 commitlint가 커밋 메시지를 검사합니다. `main`에 들어가는 변경은 conventional commit 형식을 유지해야 릴리즈가 자동으로 올라갑니다.
 
-자동 릴리즈를 쓰려면 GitHub Repository Secrets에 아래 값을 등록해야 합니다.
-
-- `MAC_CSC_LINK`
-- `MAC_CSC_KEY_PASSWORD`
-
-릴리즈 산출물은 DMG, ZIP, `latest-mac.yml`입니다. 앱 내 업데이트 확인은 이 메타데이터를 읽어서 동작합니다.
+릴리즈 산출물은 DMG, ZIP, `latest-mac.yml`입니다. 앱 내 업데이트 확인은 GitHub Releases의 최신 버전을 비교하고, 새 버전이 있으면 릴리즈 페이지를 엽니다. 자동 설치나 macOS 서명용 Secrets는 필요하지 않습니다.
 
 ## 폴더 구조
 

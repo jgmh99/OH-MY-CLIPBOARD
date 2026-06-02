@@ -32,7 +32,10 @@
   let currentUpdateState = {
     status: 'idle',
     version: null,
-    progress: null
+    releaseUrl: null,
+    message: '',
+    canCheck: true,
+    canOpen: false
   };
 
   function getMessages(language = currentSettings.language) {
@@ -177,21 +180,14 @@
       </div>
       <div class="update-panel">
         <div class="update-panel__copy">
-          <div id="update-status-title" class="setting-label"></div>
-          <div id="update-status-text" class="setting-desc update-status-text"></div>
-        </div>
-        <div id="update-progress" class="update-progress hidden">
-          <div class="update-progress__track">
-            <span id="update-progress-fill" class="update-progress__fill"></span>
-          </div>
-          <div id="update-progress-label" class="update-progress__label"></div>
-        </div>
+        <div id="update-status-title" class="setting-label"></div>
+        <div id="update-status-text" class="setting-desc update-status-text"></div>
+      </div>
         <div class="update-actions">
           <button id="check-for-updates" class="action-button action-button--secondary action-button--full" type="button"></button>
           <div id="update-action-row" class="update-action-row hidden">
             <button id="update-primary-action" class="action-button action-button--full" type="button"></button>
-            <button id="skip-update" class="action-button action-button--secondary action-button--full" type="button"></button>
-            <button id="cancel-update" class="action-button action-button--secondary action-button--full" type="button"></button>
+            <button id="update-later-action" class="action-button action-button--secondary action-button--full" type="button"></button>
           </div>
         </div>
       </div>
@@ -201,14 +197,10 @@
     updateUi.groupTitle = section.querySelector('#updates-group-title');
     updateUi.statusTitle = section.querySelector('#update-status-title');
     updateUi.statusText = section.querySelector('#update-status-text');
-    updateUi.progress = section.querySelector('#update-progress');
-    updateUi.progressFill = section.querySelector('#update-progress-fill');
-    updateUi.progressLabel = section.querySelector('#update-progress-label');
     updateUi.checkButton = section.querySelector('#check-for-updates');
     updateUi.actionRow = section.querySelector('#update-action-row');
     updateUi.primaryButton = section.querySelector('#update-primary-action');
-    updateUi.skipButton = section.querySelector('#skip-update');
-    updateUi.cancelButton = section.querySelector('#cancel-update');
+    updateUi.laterButton = section.querySelector('#update-later-action');
 
     return section;
   }
@@ -350,22 +342,8 @@
         return formatMessage(messages.updates.statusAvailable, {
           version: updateState.version || '?'
         });
-      case 'downloading':
-        return formatMessage(messages.updates.statusDownloading, {
-          percent: updateState.progress ?? 0
-        });
-      case 'downloaded':
-        return formatMessage(messages.updates.statusDownloaded, {
-          version: updateState.version || '?'
-        });
       case 'not-available':
         return messages.updates.statusNotAvailable;
-      case 'skipped':
-        return formatMessage(messages.updates.statusSkipped, {
-          version: updateState.version || updateState.skippedVersion || '?'
-        });
-      case 'disabled':
-        return messages.updates.statusDisabled;
       case 'error':
         return updateState.message
           ? `${messages.updates.statusError} ${updateState.message}`
@@ -383,10 +361,7 @@
     }
 
     const messages = getMessages();
-    const progressValue = typeof currentUpdateState.progress === 'number' ? currentUpdateState.progress : 0;
-    const primaryVisible = ['available', 'downloaded'].includes(currentUpdateState.status);
-    const skipVisible = ['available', 'downloaded'].includes(currentUpdateState.status);
-    const cancelVisible = ['available', 'downloaded', 'downloading'].includes(currentUpdateState.status);
+    const actionVisible = currentUpdateState.status === 'available';
 
     updateUi.groupKicker.textContent = '';
     updateUi.groupTitle.textContent = messages.updates.groupTitle;
@@ -397,25 +372,12 @@
     updateUi.checkButton.textContent = messages.updates.checkButton;
     updateUi.checkButton.disabled = !currentUpdateState.canCheck;
 
-    updateUi.actionRow.classList.toggle('hidden', !(primaryVisible || skipVisible || cancelVisible));
-    updateUi.primaryButton.classList.toggle('hidden', !primaryVisible);
-    updateUi.skipButton.classList.toggle('hidden', !skipVisible);
-    updateUi.cancelButton.classList.toggle('hidden', !cancelVisible);
+    updateUi.actionRow.classList.toggle('hidden', !actionVisible);
+    updateUi.primaryButton.classList.toggle('hidden', !actionVisible);
+    updateUi.laterButton.classList.toggle('hidden', !actionVisible);
 
-    updateUi.primaryButton.textContent = currentUpdateState.status === 'downloaded'
-      ? messages.updates.installButton
-      : messages.updates.downloadButton;
-    updateUi.skipButton.textContent = messages.updates.skipButton;
-    updateUi.cancelButton.textContent = currentUpdateState.status === 'downloading'
-      ? messages.updates.cancelDownloadButton
-      : messages.updates.cancelButton;
-
-    const showProgress = ['downloading', 'downloaded'].includes(currentUpdateState.status);
-    updateUi.progress.classList.toggle('hidden', !showProgress);
-    updateUi.progressFill.style.width = `${progressValue}%`;
-    updateUi.progressLabel.textContent = currentUpdateState.status === 'downloaded'
-      ? messages.updates.readyLabel
-      : formatMessage(messages.updates.progressLabel, { percent: progressValue });
+    updateUi.primaryButton.textContent = messages.updates.openButton;
+    updateUi.laterButton.textContent = messages.updates.laterButton;
   }
 
   function syncSegmented(control) {
@@ -581,21 +543,21 @@
     renderUpdateState(nextState);
   });
   updateUi.primaryButton.addEventListener('click', async () => {
-    if (currentUpdateState.status === 'downloaded') {
-      await window.clipboardApp.installUpdate();
+    if (!currentUpdateState.canOpen) {
       return;
     }
 
-    const nextState = await window.clipboardApp.downloadUpdate();
-    renderUpdateState(nextState);
+    await window.clipboardApp.openUpdateRelease();
   });
-  updateUi.skipButton.addEventListener('click', async () => {
-    const nextState = await window.clipboardApp.skipUpdate();
-    renderUpdateState(nextState);
-  });
-  updateUi.cancelButton.addEventListener('click', async () => {
-    const nextState = await window.clipboardApp.cancelUpdate();
-    renderUpdateState(nextState);
+  updateUi.laterButton.addEventListener('click', () => {
+    renderUpdateState({
+      status: 'idle',
+      version: null,
+      releaseUrl: null,
+      message: '',
+      canCheck: true,
+      canOpen: false
+    });
   });
 
   document.addEventListener('click', (event) => {
@@ -606,10 +568,9 @@
 
   window.clipboardApp.onHistoryUpdated(renderHistory);
   window.clipboardApp.onSettingsUpdated(renderSettings);
-  window.clipboardApp.onUpdateStateChanged(renderUpdateState);
   window.clipboardApp.onOpenSettingsView(showSettingsView);
 
   window.clipboardApp.getHistory().then(renderHistory);
   window.clipboardApp.getSettings().then(renderSettings);
-  window.clipboardApp.getUpdateState().then(renderUpdateState);
+  renderUpdateState(currentUpdateState);
 })();
