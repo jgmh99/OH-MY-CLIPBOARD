@@ -10,11 +10,20 @@
   "scripts": {
     "dev": "electron .",
     "start": "electron .",
-    "dist": "electron-builder --mac"
+    "dist": "electron-builder --mac --publish never",
+    "release": "semantic-release",
+    "lint:commits": "commitlint --from origin/main --to HEAD"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/github": "^11.0.6",
+    "@semantic-release/release-notes-generator": "^14.1.1",
     "electron": "latest",
-    "electron-builder": "latest"
+    "electron-builder": "latest",
+    "semantic-release": "^24.2.9"
   },
   "build": {
     "appId": "com.ohmyclipboard.app",

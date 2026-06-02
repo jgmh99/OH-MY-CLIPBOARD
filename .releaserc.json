@@ -1,0 +1,36 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "npm version --no-git-tag-version ${nextRelease.version} && npm run dist"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/*.dmg",
+            "label": "macOS DMG"
+          },
+          {
+            "path": "dist/*.zip",
+            "label": "macOS ZIP"
+          },
+          {
+            "path": "dist/latest-mac.yml",
+            "label": "macOS update metadata"
+          },
+          {
+            "path": "dist/*.blockmap",
+            "label": "Blockmap"
+          }
+        ]
+      }
+    ]
+  ]
+}
