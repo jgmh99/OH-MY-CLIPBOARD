@@ -22,12 +22,18 @@
   }));
 
   const controlRegistry = {};
+  const updateUi = {};
   let currentSettings = {
     theme: 'system',
     textSize: 13,
     language: 'ko'
   };
   let currentHistory = [];
+  let currentUpdateState = {
+    status: 'idle',
+    version: null,
+    progress: null
+  };
 
   function getMessages(language = currentSettings.language) {
     return translations[language] || translations.ko;
@@ -59,6 +65,13 @@
     }
 
     return messages.options[option.labelKey];
+  }
+
+  function formatMessage(template, replacements) {
+    return Object.entries(replacements).reduce(
+      (result, [key, value]) => result.replaceAll(`{${key}}`, String(value)),
+      template
+    );
   }
 
   function showHistoryView() {
@@ -152,6 +165,54 @@
     return row;
   }
 
+  function createUpdatesSection() {
+    const section = document.createElement('section');
+    section.className = 'settings-group panel';
+    section.innerHTML = `
+      <div class="panel__header">
+        <div>
+          <p id="updates-group-kicker" class="panel__kicker"></p>
+          <h2 id="updates-group-title" class="panel__title"></h2>
+        </div>
+      </div>
+      <div class="update-panel">
+        <div class="update-panel__copy">
+          <div id="update-status-title" class="setting-label"></div>
+          <div id="update-status-text" class="setting-desc update-status-text"></div>
+        </div>
+        <div id="update-progress" class="update-progress hidden">
+          <div class="update-progress__track">
+            <span id="update-progress-fill" class="update-progress__fill"></span>
+          </div>
+          <div id="update-progress-label" class="update-progress__label"></div>
+        </div>
+        <div class="update-actions">
+          <button id="check-for-updates" class="action-button action-button--secondary action-button--full" type="button"></button>
+          <div id="update-action-row" class="update-action-row hidden">
+            <button id="update-primary-action" class="action-button action-button--full" type="button"></button>
+            <button id="skip-update" class="action-button action-button--secondary action-button--full" type="button"></button>
+            <button id="cancel-update" class="action-button action-button--secondary action-button--full" type="button"></button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    updateUi.groupKicker = section.querySelector('#updates-group-kicker');
+    updateUi.groupTitle = section.querySelector('#updates-group-title');
+    updateUi.statusTitle = section.querySelector('#update-status-title');
+    updateUi.statusText = section.querySelector('#update-status-text');
+    updateUi.progress = section.querySelector('#update-progress');
+    updateUi.progressFill = section.querySelector('#update-progress-fill');
+    updateUi.progressLabel = section.querySelector('#update-progress-label');
+    updateUi.checkButton = section.querySelector('#check-for-updates');
+    updateUi.actionRow = section.querySelector('#update-action-row');
+    updateUi.primaryButton = section.querySelector('#update-primary-action');
+    updateUi.skipButton = section.querySelector('#skip-update');
+    updateUi.cancelButton = section.querySelector('#cancel-update');
+
+    return section;
+  }
+
   function buildSettingsView() {
     const fragment = document.createDocumentFragment();
 
@@ -173,6 +234,8 @@
 
       fragment.appendChild(section);
     });
+
+    fragment.appendChild(createUpdatesSection());
 
     const actionSection = document.createElement('section');
     actionSection.className = 'settings-group settings-group--action panel';
@@ -279,6 +342,82 @@
     });
   }
 
+  function getUpdateStatusText(updateState, messages) {
+    switch (updateState.status) {
+      case 'checking':
+        return messages.updates.statusChecking;
+      case 'available':
+        return formatMessage(messages.updates.statusAvailable, {
+          version: updateState.version || '?'
+        });
+      case 'downloading':
+        return formatMessage(messages.updates.statusDownloading, {
+          percent: updateState.progress ?? 0
+        });
+      case 'downloaded':
+        return formatMessage(messages.updates.statusDownloaded, {
+          version: updateState.version || '?'
+        });
+      case 'not-available':
+        return messages.updates.statusNotAvailable;
+      case 'skipped':
+        return formatMessage(messages.updates.statusSkipped, {
+          version: updateState.version || updateState.skippedVersion || '?'
+        });
+      case 'disabled':
+        return messages.updates.statusDisabled;
+      case 'error':
+        return updateState.message
+          ? `${messages.updates.statusError} ${updateState.message}`
+          : messages.updates.statusError;
+      default:
+        return messages.updates.statusIdle;
+    }
+  }
+
+  function renderUpdateState(updateState) {
+    currentUpdateState = updateState || currentUpdateState;
+
+    if (!updateUi.groupTitle) {
+      return;
+    }
+
+    const messages = getMessages();
+    const progressValue = typeof currentUpdateState.progress === 'number' ? currentUpdateState.progress : 0;
+    const primaryVisible = ['available', 'downloaded'].includes(currentUpdateState.status);
+    const skipVisible = ['available', 'downloaded'].includes(currentUpdateState.status);
+    const cancelVisible = ['available', 'downloaded', 'downloading'].includes(currentUpdateState.status);
+
+    updateUi.groupKicker.textContent = '';
+    updateUi.groupTitle.textContent = messages.updates.groupTitle;
+    updateUi.statusTitle.textContent = currentUpdateState.version
+      ? formatMessage(messages.updates.versionLabel, { version: currentUpdateState.version })
+      : messages.updates.summaryTitle;
+    updateUi.statusText.textContent = getUpdateStatusText(currentUpdateState, messages);
+    updateUi.checkButton.textContent = messages.updates.checkButton;
+    updateUi.checkButton.disabled = !currentUpdateState.canCheck;
+
+    updateUi.actionRow.classList.toggle('hidden', !(primaryVisible || skipVisible || cancelVisible));
+    updateUi.primaryButton.classList.toggle('hidden', !primaryVisible);
+    updateUi.skipButton.classList.toggle('hidden', !skipVisible);
+    updateUi.cancelButton.classList.toggle('hidden', !cancelVisible);
+
+    updateUi.primaryButton.textContent = currentUpdateState.status === 'downloaded'
+      ? messages.updates.installButton
+      : messages.updates.downloadButton;
+    updateUi.skipButton.textContent = messages.updates.skipButton;
+    updateUi.cancelButton.textContent = currentUpdateState.status === 'downloading'
+      ? messages.updates.cancelDownloadButton
+      : messages.updates.cancelButton;
+
+    const showProgress = ['downloading', 'downloaded'].includes(currentUpdateState.status);
+    updateUi.progress.classList.toggle('hidden', !showProgress);
+    updateUi.progressFill.style.width = `${progressValue}%`;
+    updateUi.progressLabel.textContent = currentUpdateState.status === 'downloaded'
+      ? messages.updates.readyLabel
+      : formatMessage(messages.updates.progressLabel, { percent: progressValue });
+  }
+
   function syncSegmented(control) {
     if (control.kind !== 'segmented') {
       return;
@@ -355,6 +494,8 @@
       document.getElementById(`${config.key}-label`).textContent = messages.labels[config.key];
       document.getElementById(`${config.key}-desc`).textContent = messages.descriptions[config.key];
     });
+
+    renderUpdateState(currentUpdateState);
   }
 
   function renderHistory(history) {
@@ -435,6 +576,27 @@
   openLoginSettings.addEventListener('click', () => {
     window.clipboardApp.openLoginItemsSettings();
   });
+  updateUi.checkButton.addEventListener('click', async () => {
+    const nextState = await window.clipboardApp.checkForUpdates();
+    renderUpdateState(nextState);
+  });
+  updateUi.primaryButton.addEventListener('click', async () => {
+    if (currentUpdateState.status === 'downloaded') {
+      await window.clipboardApp.installUpdate();
+      return;
+    }
+
+    const nextState = await window.clipboardApp.downloadUpdate();
+    renderUpdateState(nextState);
+  });
+  updateUi.skipButton.addEventListener('click', async () => {
+    const nextState = await window.clipboardApp.skipUpdate();
+    renderUpdateState(nextState);
+  });
+  updateUi.cancelButton.addEventListener('click', async () => {
+    const nextState = await window.clipboardApp.cancelUpdate();
+    renderUpdateState(nextState);
+  });
 
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.dropdown')) {
@@ -444,8 +606,10 @@
 
   window.clipboardApp.onHistoryUpdated(renderHistory);
   window.clipboardApp.onSettingsUpdated(renderSettings);
+  window.clipboardApp.onUpdateStateChanged(renderUpdateState);
   window.clipboardApp.onOpenSettingsView(showSettingsView);
 
   window.clipboardApp.getHistory().then(renderHistory);
   window.clipboardApp.getSettings().then(renderSettings);
+  window.clipboardApp.getUpdateState().then(renderUpdateState);
 })();

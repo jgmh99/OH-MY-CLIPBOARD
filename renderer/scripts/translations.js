@@ -59,6 +59,28 @@ window.OhMyClipboardTranslations = {
       languageEn: '영어',
       languageJa: '일본어',
       languageZh: '중국어'
+    },
+    updates: {
+      groupTitle: '앱 업데이트',
+      summaryTitle: '새 버전 확인',
+      versionLabel: '버전 {version}',
+      checkButton: '업데이트 확인',
+      downloadButton: '설치 준비',
+      installButton: '지금 설치',
+      skipButton: '건너뛰기',
+      cancelButton: '취소',
+      cancelDownloadButton: '다운로드 취소',
+      readyLabel: '설치 준비 완료',
+      progressLabel: '{percent}% 다운로드됨',
+      statusIdle: '설치 가능한 새 버전이 있는지 직접 확인할 수 있습니다.',
+      statusChecking: '새 버전을 확인하고 있습니다.',
+      statusAvailable: '버전 {version} 업데이트를 설치할 수 있습니다.',
+      statusDownloading: '업데이트를 내려받는 중입니다. {percent}%',
+      statusDownloaded: '버전 {version} 설치 준비가 끝났습니다.',
+      statusNotAvailable: '현재 최신 버전을 사용 중입니다.',
+      statusSkipped: '버전 {version} 업데이트를 건너뛰었습니다.',
+      statusDisabled: '업데이트 확인은 패키징된 앱에서만 동작합니다.',
+      statusError: '업데이트 확인 중 문제가 발생했습니다.'
     }
   },
   en: {
@@ -121,6 +143,28 @@ window.OhMyClipboardTranslations = {
       languageEn: 'English',
       languageJa: 'Japanese',
       languageZh: 'Chinese'
+    },
+    updates: {
+      groupTitle: 'App Updates',
+      summaryTitle: 'Check for a new version',
+      versionLabel: 'Version {version}',
+      checkButton: 'Check for Updates',
+      downloadButton: 'Download and Install',
+      installButton: 'Install Now',
+      skipButton: 'Skip',
+      cancelButton: 'Cancel',
+      cancelDownloadButton: 'Cancel Download',
+      readyLabel: 'Ready to install',
+      progressLabel: '{percent}% downloaded',
+      statusIdle: 'Check manually when you want to look for a new release.',
+      statusChecking: 'Checking for updates now.',
+      statusAvailable: 'Version {version} is available to install.',
+      statusDownloading: 'Downloading the update now. {percent}%',
+      statusDownloaded: 'Version {version} is ready to install.',
+      statusNotAvailable: 'You are already on the latest version.',
+      statusSkipped: 'Version {version} was skipped.',
+      statusDisabled: 'Update checks only run in packaged builds.',
+      statusError: 'Something went wrong while checking for updates.'
     }
   },
   ja: {
@@ -183,6 +227,28 @@ window.OhMyClipboardTranslations = {
       languageEn: '英語',
       languageJa: '日本語',
       languageZh: '中国語'
+    },
+    updates: {
+      groupTitle: 'アプリのアップデート',
+      summaryTitle: '新しいバージョンを確認',
+      versionLabel: 'バージョン {version}',
+      checkButton: 'アップデートを確認',
+      downloadButton: 'ダウンロードしてインストール',
+      installButton: '今すぐインストール',
+      skipButton: 'スキップ',
+      cancelButton: 'キャンセル',
+      cancelDownloadButton: 'ダウンロードを中止',
+      readyLabel: 'インストールの準備完了',
+      progressLabel: '{percent}% ダウンロード済み',
+      statusIdle: '新しいリリースが必要なときに手動で確認できます。',
+      statusChecking: 'アップデートを確認しています。',
+      statusAvailable: 'バージョン {version} をインストールできます。',
+      statusDownloading: 'アップデートをダウンロード中です。{percent}%',
+      statusDownloaded: 'バージョン {version} をインストールできます。',
+      statusNotAvailable: 'すでに最新バージョンです。',
+      statusSkipped: 'バージョン {version} をスキップしました。',
+      statusDisabled: 'アップデート確認はパッケージ版アプリでのみ動作します。',
+      statusError: 'アップデート確認中に問題が発生しました。'
     }
   },
   zh: {
@@ -245,6 +311,28 @@ window.OhMyClipboardTranslations = {
       languageEn: '英语',
       languageJa: '日语',
       languageZh: '中文'
+    },
+    updates: {
+      groupTitle: '应用更新',
+      summaryTitle: '检查新版本',
+      versionLabel: '版本 {version}',
+      checkButton: '检查更新',
+      downloadButton: '下载并安装',
+      installButton: '立即安装',
+      skipButton: '跳过',
+      cancelButton: '取消',
+      cancelDownloadButton: '取消下载',
+      readyLabel: '已准备安装',
+      progressLabel: '已下载 {percent}%',
+      statusIdle: '需要时可以手动检查是否有新版本。',
+      statusChecking: '正在检查更新。',
+      statusAvailable: '可以安装版本 {version}。',
+      statusDownloading: '正在下载更新。{percent}%',
+      statusDownloaded: '版本 {version} 已可安装。',
+      statusNotAvailable: '当前已经是最新版本。',
+      statusSkipped: '已跳过版本 {version}。',
+      statusDisabled: '仅在已打包的应用中支持检查更新。',
+      statusError: '检查更新时出现问题。'
     }
   }
 };

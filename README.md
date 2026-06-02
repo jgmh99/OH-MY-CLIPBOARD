@@ -87,4 +87,3 @@ npm run dist
 - 최대 텍스트 길이
 - 클립보드 추적
 - 포커스 해제 시 자동 닫기
-# OH-MY-CLIPBOARD

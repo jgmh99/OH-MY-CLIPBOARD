@@ -9,6 +9,7 @@ const {
   globalShortcut,
   shell
 } = require('electron');
+const { autoUpdater, CancellationToken } = require('electron-updater');
 
 const path = require('path');
 const fs = require('fs');
@@ -19,6 +20,11 @@ let win = null;
 let clipboardHistory = [];
 let lastText = '';
 let clipboardTimer = null;
+let updateCancellationToken = null;
+let updateState = null;
+
+const TRAY_ICON_PATH = path.join(__dirname, 'icons', 'icon.png');
+const APP_ICON_PATH = path.join(__dirname, 'icons', 'oh-my-clipboard.icns');
 
 const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'zh'];
 const SETTINGS_OPTIONS = {
@@ -80,14 +86,21 @@ const translations = {
 };
 
 function createTrayIcon() {
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg=='
-  );
+  const icon = nativeImage.createFromPath(TRAY_ICON_PATH);
 
-  return icon.resize({
+  if (icon.isEmpty()) {
+    return nativeImage.createFromDataURL(
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg=='
+    );
+  }
+
+  const resized = icon.resize({
     width: 16,
     height: 16
   });
+
+  resized.setTemplateImage(true);
+  return resized;
 }
 
 const defaultSettings = {
@@ -101,7 +114,8 @@ const defaultSettings = {
   autoHideOnBlur: true,
   theme: 'system',
   textSize: 13,
-  language: 'ko'
+  language: 'ko',
+  skippedUpdateVersion: ''
 };
 
 let settings = { ...defaultSettings };
@@ -129,6 +143,14 @@ function loadSettings() {
     };
 
     settings = sanitizeSettings(settings);
+
+    if (settings.skippedUpdateVersion === app.getVersion()) {
+      settings = sanitizeSettings({
+        ...settings,
+        skippedUpdateVersion: ''
+      });
+      saveSettings();
+    }
   } catch {
     settings = { ...defaultSettings };
     saveSettings();
@@ -177,6 +199,14 @@ function sanitizeBoolean(value, fallback) {
   if (typeof value === 'boolean') return value;
   if (value === 'true') return true;
   if (value === 'false') return false;
+  return fallback;
+}
+
+function sanitizeString(value, fallback = '') {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+
   return fallback;
 }
 
@@ -260,7 +290,8 @@ function sanitizeSettings(nextSettings) {
       'language',
       nextSettings.language,
       defaultSettings.language
-    )
+    ),
+    skippedUpdateVersion: sanitizeString(nextSettings.skippedUpdateVersion, defaultSettings.skippedUpdateVersion)
   };
 
   if (sanitized.minTextLength > sanitized.maxTextLength) {
@@ -270,6 +301,73 @@ function sanitizeSettings(nextSettings) {
   return sanitized;
 }
 
+function createUpdateState(overrides = {}) {
+  const status = overrides.status || 'idle';
+
+  return {
+    status,
+    version: overrides.version ?? null,
+    releaseName: overrides.releaseName ?? null,
+    releaseDate: overrides.releaseDate ?? null,
+    message: overrides.message || '',
+    progress: overrides.progress ?? null,
+    skippedVersion: settings.skippedUpdateVersion || '',
+    canCheck: overrides.canCheck ?? !['checking', 'downloading'].includes(status),
+    canDownload: overrides.canDownload ?? status === 'available',
+    canInstall: overrides.canInstall ?? status === 'downloaded',
+    canSkip: overrides.canSkip ?? ['available', 'downloaded'].includes(status),
+    canCancel: overrides.canCancel ?? ['available', 'downloaded', 'downloading'].includes(status)
+  };
+}
+
+function setUpdateState(overrides = {}) {
+  const nextState = {
+    ...(updateState || {}),
+    ...overrides
+  };
+
+  if (!Object.prototype.hasOwnProperty.call(overrides, 'canCheck')) {
+    delete nextState.canCheck;
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(overrides, 'canDownload')) {
+    delete nextState.canDownload;
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(overrides, 'canInstall')) {
+    delete nextState.canInstall;
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(overrides, 'canSkip')) {
+    delete nextState.canSkip;
+  }
+
+  if (!Object.prototype.hasOwnProperty.call(overrides, 'canCancel')) {
+    delete nextState.canCancel;
+  }
+
+  updateState = createUpdateState(nextState);
+
+  if (win) {
+    win.webContents.send('update-state-changed', updateState);
+  }
+
+  return updateState;
+}
+
+function setSkippedUpdateVersion(version) {
+  settings = sanitizeSettings({
+    ...settings,
+    skippedUpdateVersion: version
+  });
+  saveSettings();
+  syncRendererState();
+}
+
+function isAutoUpdateEnabled() {
+  return app.isPackaged;
+}
+
 function syncRendererState() {
   if (!win) {
     return;
@@ -277,6 +375,7 @@ function syncRendererState() {
 
   win.webContents.send('settings-updated', settings);
   win.webContents.send('clipboard-history-updated', clipboardHistory);
+  win.webContents.send('update-state-changed', updateState);
 }
 
 function applyLoginItemSetting() {
@@ -335,6 +434,209 @@ function updateSetting(key, value) {
   return settings;
 }
 
+function configureAutoUpdater() {
+  if (!isAutoUpdateEnabled()) {
+    setUpdateState({
+      status: 'disabled',
+      message: 'Updates are available in packaged builds.',
+      canCheck: false
+    });
+    return;
+  }
+
+  autoUpdater.autoDownload = false;
+  autoUpdater.autoInstallOnAppQuit = false;
+
+  autoUpdater.on('checking-for-update', () => {
+    setUpdateState({
+      status: 'checking',
+      message: 'Checking for updates...',
+      progress: null
+    });
+  });
+
+  autoUpdater.on('update-available', (info) => {
+    if (settings.skippedUpdateVersion && settings.skippedUpdateVersion === info.version) {
+      setUpdateState({
+        status: 'skipped',
+        version: info.version,
+        releaseName: info.releaseName || null,
+        releaseDate: info.releaseDate || null,
+        message: `Version ${info.version} was skipped.`,
+        canCancel: false
+      });
+      return;
+    }
+
+    if (settings.skippedUpdateVersion && settings.skippedUpdateVersion !== info.version) {
+      setSkippedUpdateVersion('');
+    }
+
+    setUpdateState({
+      status: 'available',
+      version: info.version,
+      releaseName: info.releaseName || null,
+      releaseDate: info.releaseDate || null,
+      message: `Version ${info.version} is available.`,
+      progress: null
+    });
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    setUpdateState({
+      status: 'not-available',
+      message: 'You are on the latest version.',
+      version: null,
+      progress: null,
+      canCancel: false
+    });
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    setUpdateState({
+      status: 'downloading',
+      message: `Downloading update... ${Math.round(progress.percent)}%`,
+      progress: Math.max(0, Math.min(100, Math.round(progress.percent)))
+    });
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    updateCancellationToken = null;
+    setUpdateState({
+      status: 'downloaded',
+      version: info.version,
+      releaseName: info.releaseName || null,
+      releaseDate: info.releaseDate || null,
+      message: `Version ${info.version} is ready to install.`,
+      progress: 100
+    });
+  });
+
+  autoUpdater.on('update-cancelled', () => {
+    updateCancellationToken = null;
+    setUpdateState({
+      status: 'available',
+      message: 'Update download was cancelled.',
+      progress: null
+    });
+  });
+
+  autoUpdater.on('error', (error) => {
+    updateCancellationToken = null;
+    setUpdateState({
+      status: 'error',
+      message: error?.message || 'Update check failed.',
+      progress: null,
+      canCancel: false
+    });
+  });
+
+  setUpdateState({
+    status: 'idle',
+    message: 'Check for updates when you are ready.'
+  });
+}
+
+async function checkForUpdates() {
+  if (!isAutoUpdateEnabled()) {
+    return setUpdateState({
+      status: 'disabled',
+      message: 'Updates are available in packaged builds.',
+      canCheck: false
+    });
+  }
+
+  try {
+    await autoUpdater.checkForUpdates();
+  } catch (error) {
+    setUpdateState({
+      status: 'error',
+      message: error?.message || 'Update check failed.',
+      progress: null,
+      canCancel: false
+    });
+  }
+
+  return updateState;
+}
+
+async function downloadUpdate() {
+  if (updateState?.status !== 'available') {
+    return updateState;
+  }
+
+  updateCancellationToken = new CancellationToken();
+
+  try {
+    await autoUpdater.downloadUpdate(updateCancellationToken);
+  } catch (error) {
+    if (updateCancellationToken?.cancelled) {
+      return setUpdateState({
+        status: 'available',
+        message: 'Update download was cancelled.',
+        progress: null
+      });
+    }
+
+    setUpdateState({
+      status: 'error',
+      message: error?.message || 'Update download failed.',
+      progress: null,
+      canCancel: false
+    });
+  }
+
+  return updateState;
+}
+
+function cancelUpdate() {
+  if (updateState?.status === 'downloading' && updateCancellationToken) {
+    updateCancellationToken.cancel();
+    return setUpdateState({
+      status: 'available',
+      message: 'Update download was cancelled.',
+      progress: null
+    });
+  }
+
+  if (['available', 'downloaded', 'not-available', 'error', 'skipped'].includes(updateState?.status)) {
+    return setUpdateState({
+      status: 'idle',
+      version: null,
+      releaseName: null,
+      releaseDate: null,
+      message: 'Check for updates when you are ready.',
+      progress: null,
+      canCancel: false
+    });
+  }
+
+  return updateState;
+}
+
+function skipUpdate() {
+  if (!updateState?.version) {
+    return updateState;
+  }
+
+  setSkippedUpdateVersion(updateState.version);
+
+  return setUpdateState({
+    status: 'skipped',
+    message: `Version ${updateState.version} was skipped.`,
+    canCancel: false
+  });
+}
+
+function installUpdateAndRestart() {
+  if (updateState?.status !== 'downloaded') {
+    return updateState;
+  }
+
+  autoUpdater.quitAndInstall(false, true);
+  return updateState;
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 390,
@@ -346,6 +648,7 @@ function createWindow() {
     fullscreenable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
+    icon: APP_ICON_PATH,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -524,12 +827,17 @@ app.whenReady().then(() => {
 
   loadSettings();
   applyLoginItemSetting();
+  updateState = createUpdateState({
+    status: 'idle',
+    message: 'Check for updates when you are ready.'
+  });
 
   if (process.platform === 'darwin') {
     app.dock.hide();
   }
 
   createWindow();
+  configureAutoUpdater();
   createTray();
   registerShortcut();
   watchClipboard();
@@ -602,8 +910,32 @@ ipcMain.handle('get-settings', () => {
   return settings;
 });
 
+ipcMain.handle('get-update-state', () => {
+  return updateState;
+});
+
 ipcMain.handle('update-setting', (_event, key, value) => {
   return updateSetting(key, value);
+});
+
+ipcMain.handle('check-for-updates', () => {
+  return checkForUpdates();
+});
+
+ipcMain.handle('download-update', () => {
+  return downloadUpdate();
+});
+
+ipcMain.handle('cancel-update', () => {
+  return cancelUpdate();
+});
+
+ipcMain.handle('skip-update', () => {
+  return skipUpdate();
+});
+
+ipcMain.handle('install-update', () => {
+  return installUpdateAndRestart();
 });
 
 ipcMain.handle('open-login-items-settings', () => {

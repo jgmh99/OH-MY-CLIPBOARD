@@ -2,11 +2,15 @@
   "name": "oh-my-clipboard",
   "version": "1.0.0",
   "description": "A macOS menu bar clipboard history app.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jgmh99/OH-MY-CLIPBOARD.git"
+  },
   "main": "main.js",
   "scripts": {
     "dev": "electron .",
     "start": "electron .",
-    "dist": "electron-builder --mac dmg"
+    "dist": "electron-builder --mac"
   },
   "devDependencies": {
     "electron": "latest",
@@ -15,9 +19,27 @@
   "build": {
     "appId": "com.ohmyclipboard.app",
     "productName": "Oh My Clipboard",
+    "directories": {
+      "buildResources": "icons"
+    },
     "mac": {
-      "target": "dmg",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "icons/oh-my-clipboard.icns",
       "category": "public.app-category.utilities"
+    },
+    "dmg": {
+      "icon": "icons/oh-my-clipboard.icns"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "jgmh99",
+      "repo": "OH-MY-CLIPBOARD"
     }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
   }
 }
