@@ -36,11 +36,11 @@
         "dmg",
         "zip"
       ],
-      "icon": "icons/oh-my-clipboard.icns",
+      "icon": "oh-my-clipboard.icns",
       "category": "public.app-category.utilities"
     },
     "dmg": {
-      "icon": "icons/oh-my-clipboard.icns"
+      "icon": "oh-my-clipboard.icns"
     },
     "publish": {
       "provider": "github",
