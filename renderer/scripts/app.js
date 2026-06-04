@@ -14,6 +14,8 @@
   const historyHeaderCopy = document.getElementById('history-header-copy');
   const historyPanelHeader = document.getElementById('history-panel-header');
   const settingsHeaderCopy = document.getElementById('settings-header-copy');
+  const historySearchInput = document.getElementById('history-search');
+  const historySearchClear = document.getElementById('history-search-clear');
 
   const groupOrder = ['general', 'history', 'behavior'];
   const groupedConfig = groupOrder.map((group) => ({
@@ -29,6 +31,7 @@
     language: 'ko'
   };
   let currentHistory = [];
+  let currentHistoryQuery = '';
   let currentUpdateState = {
     status: 'idle',
     version: null,
@@ -75,6 +78,27 @@
       (result, [key, value]) => result.replaceAll(`{${key}}`, String(value)),
       template
     );
+  }
+
+  function getHistorySearchableText(item, messages) {
+    if (item.kind === 'image') {
+      return [messages.imageItem, item.altText || '', item.note || ''].join(' ').trim();
+    }
+
+    return [item.text || '', item.note || ''].join(' ').trim();
+  }
+
+  function filterHistory(history, query, messages) {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return history;
+    }
+
+    return history.filter((item) => {
+      const searchable = getHistorySearchableText(item, messages).toLowerCase();
+      return searchable.includes(normalizedQuery);
+    });
   }
 
   function showHistoryView() {
@@ -183,12 +207,13 @@
         <div id="update-status-title" class="setting-label"></div>
         <div id="update-status-text" class="setting-desc update-status-text"></div>
       </div>
-        <div class="update-actions">
+      <div class="update-actions">
           <button id="check-for-updates" class="action-button action-button--secondary action-button--full" type="button"></button>
           <div id="update-action-row" class="update-action-row hidden">
             <button id="update-primary-action" class="action-button action-button--full" type="button"></button>
             <button id="update-later-action" class="action-button action-button--secondary action-button--full" type="button"></button>
           </div>
+          <button id="update-bug-report" class="action-button action-button--secondary action-button--ghost action-button--full" type="button"></button>
         </div>
       </div>
     `;
@@ -201,6 +226,7 @@
     updateUi.actionRow = section.querySelector('#update-action-row');
     updateUi.primaryButton = section.querySelector('#update-primary-action');
     updateUi.laterButton = section.querySelector('#update-later-action');
+    updateUi.reportButton = section.querySelector('#update-bug-report');
 
     return section;
   }
@@ -378,6 +404,7 @@
 
     updateUi.primaryButton.textContent = messages.updates.openButton;
     updateUi.laterButton.textContent = messages.updates.laterButton;
+    updateUi.reportButton.textContent = messages.updates.reportBugButton;
   }
 
   function syncSegmented(control) {
@@ -441,6 +468,8 @@
     clearButton.textContent = messages.clear;
     document.getElementById('history-panel-kicker').textContent = '';
     document.getElementById('history-panel-title').textContent = messages.historyPanelTitle;
+    historySearchInput.placeholder = messages.searchPlaceholder;
+    historySearchClear.setAttribute('aria-label', messages.clearSearch);
 
     document.getElementById('settings-kicker').textContent = '';
     document.getElementById('settings-title').textContent = messages.settingsTitle;
@@ -465,35 +494,95 @@
     list.innerHTML = '';
 
     const messages = getMessages();
+    const visibleHistory = filterHistory(history, currentHistoryQuery, messages);
+
     if (!history.length) {
       list.innerHTML = `<div class="empty-state">${messages.noHistory}</div>`;
       return;
     }
 
-    history.forEach((item) => {
+    if (!visibleHistory.length) {
+      list.innerHTML = `<div class="empty-state">${messages.noSearchResults}</div>`;
+      return;
+    }
+
+    visibleHistory.forEach((item) => {
       const row = document.createElement('article');
       row.className = item.locked ? 'history-item history-item--locked' : 'history-item';
-      row.innerHTML = `
-        <button class="history-item__lock" type="button">${item.locked ? '🔒' : '🔓'}</button>
-        <button class="history-item__text" type="button"></button>
-        <button class="history-item__delete" type="button">×</button>
-      `;
 
-      row.querySelector('.history-item__text').textContent =
-        item.text.length > 180 ? `${item.text.slice(0, 180)}...` : item.text;
+      const main = document.createElement('div');
+      main.className = 'history-item__main';
 
-      row.querySelector('.history-item__lock').addEventListener('click', async (event) => {
+      const content = document.createElement('div');
+      content.className = 'history-item__content';
+
+      const preview = document.createElement('div');
+      preview.className = 'history-item__preview';
+
+      const typeLabel = document.createElement('p');
+      typeLabel.className = 'history-item__type';
+      typeLabel.textContent = item.kind === 'image' ? messages.imageItem : messages.textItem;
+
+      const copyButton = document.createElement('button');
+      copyButton.className = 'history-item__text';
+      copyButton.type = 'button';
+      copyButton.setAttribute('aria-label', messages.copyItem);
+
+      if (item.kind === 'image' && item.imageDataUrl) {
+        const image = document.createElement('img');
+        image.className = 'history-item__image';
+        image.src = item.imageDataUrl;
+        image.alt = messages.imageAlt;
+
+        copyButton.appendChild(typeLabel);
+        copyButton.appendChild(image);
+      } else {
+        const previewText = item.text.length > 180 ? `${item.text.slice(0, 180)}...` : item.text;
+        const value = document.createElement('span');
+        value.className = 'history-item__value';
+        value.textContent = previewText;
+        copyButton.appendChild(typeLabel);
+        copyButton.appendChild(value);
+      }
+
+      preview.appendChild(copyButton);
+      content.appendChild(preview);
+      main.appendChild(content);
+
+      const actions = document.createElement('div');
+      actions.className = 'history-item__actions';
+
+      const lockButton = document.createElement('button');
+      lockButton.className = 'history-item__lock';
+      lockButton.type = 'button';
+      lockButton.textContent = item.locked ? messages.unlock : messages.lock;
+
+      const deleteButton = document.createElement('button');
+      deleteButton.className = 'history-item__delete';
+      deleteButton.type = 'button';
+      deleteButton.textContent = messages.delete;
+      deleteButton.disabled = item.locked;
+      deleteButton.title = item.locked ? messages.lockedDeleteHint : messages.delete;
+
+      actions.appendChild(lockButton);
+      actions.appendChild(deleteButton);
+
+      row.appendChild(main);
+      row.appendChild(actions);
+
+      copyButton.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        const updatedHistory = await window.clipboardApp.copyText(item.id);
+        renderHistory(updatedHistory);
+      });
+
+      lockButton.addEventListener('click', async (event) => {
         event.stopPropagation();
         const updatedHistory = await window.clipboardApp.toggleLockItem(item.id);
         renderHistory(updatedHistory);
       });
 
-      row.querySelector('.history-item__text').addEventListener('click', async () => {
-        const updatedHistory = await window.clipboardApp.copyText(item.id);
-        renderHistory(updatedHistory);
-      });
-
-      row.querySelector('.history-item__delete').addEventListener('click', async (event) => {
+      deleteButton.addEventListener('click', async (event) => {
         event.stopPropagation();
         const updatedHistory = await window.clipboardApp.deleteItem(item.id);
         renderHistory(updatedHistory);
@@ -533,6 +622,26 @@
     renderHistory(history);
   });
 
+  historySearchInput.addEventListener('input', () => {
+    currentHistoryQuery = historySearchInput.value;
+    renderHistory(currentHistory);
+  });
+
+  historySearchClear.addEventListener('click', () => {
+    historySearchInput.value = '';
+    currentHistoryQuery = '';
+    historySearchInput.focus();
+    renderHistory(currentHistory);
+  });
+
+  historySearchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      historySearchInput.value = '';
+      currentHistoryQuery = '';
+      renderHistory(currentHistory);
+    }
+  });
+
   openSettingsButton.addEventListener('click', showSettingsView);
   backButton.addEventListener('click', showHistoryView);
   openLoginSettings.addEventListener('click', () => {
@@ -558,6 +667,9 @@
       canCheck: true,
       canOpen: false
     });
+  });
+  updateUi.reportButton.addEventListener('click', async () => {
+    await window.clipboardApp.openBugReport();
   });
 
   document.addEventListener('click', (event) => {

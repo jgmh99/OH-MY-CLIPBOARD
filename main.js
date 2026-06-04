@@ -19,6 +19,7 @@ let trayMenu = null;
 let win = null;
 let clipboardHistory = [];
 let lastText = '';
+let lastClipboardSignature = '';
 let clipboardTimer = null;
 let updateState = null;
 
@@ -160,7 +161,20 @@ function saveSettings() {
 function createHistoryItem(text) {
   return {
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    kind: 'text',
     text,
+    imageDataUrl: '',
+    locked: false,
+    createdAt: Date.now()
+  };
+}
+
+function createImageHistoryItem(imageDataUrl) {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    kind: 'image',
+    text: '',
+    imageDataUrl,
     locked: false,
     createdAt: Date.now()
   };
@@ -173,14 +187,113 @@ function normalizeHistoryItem(item) {
 
   return {
     id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    kind: item.kind === 'image' ? 'image' : 'text',
     text: item.text || '',
+    imageDataUrl: item.imageDataUrl || '',
     locked: Boolean(item.locked),
     createdAt: item.createdAt || Date.now()
   };
 }
 
 function getHistoryTexts() {
-  return clipboardHistory.map((item) => item.text);
+  return clipboardHistory.map((item) => item.text || item.imageDataUrl || '');
+}
+
+function getClipboardSignature(item) {
+  if (!item) {
+    return '';
+  }
+
+  if (item.kind === 'image') {
+    return `image:${item.imageDataUrl || ''}`;
+  }
+
+  return `text:${item.text || ''}`;
+}
+
+function syncClipboardBaseline() {
+  const text = readClipboardText();
+
+  if (text) {
+    lastText = text;
+    lastClipboardSignature = `text:${text}`;
+    return;
+  }
+
+  const image = readClipboardImage();
+
+  if (image && !image.isEmpty()) {
+    lastText = '';
+    lastClipboardSignature = `image:${image.toDataURL()}`;
+    return;
+  }
+
+  lastText = '';
+  lastClipboardSignature = '';
+}
+
+function readClipboardImage() {
+  const image = clipboard.readImage();
+
+  if (image.isEmpty()) {
+    return null;
+  }
+
+  return image;
+}
+
+function readClipboardText() {
+  const text = clipboard.readText().trim();
+
+  if (text) {
+    return text;
+  }
+
+  const html = clipboard.readHTML().trim();
+
+  if (html) {
+    const plainText = html
+      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (plainText) {
+      return plainText;
+    }
+  }
+
+  const rtf = clipboard.readRTF().trim();
+
+  if (rtf) {
+    const plainText = rtf
+      .replace(/\\par[d]?/gi, '\n')
+      .replace(/\\tab/gi, '\t')
+      .replace(/\\'[0-9a-f]{2}/gi, ' ')
+      .replace(/\\[a-z]+\d* ?/gi, ' ')
+      .replace(/[{}]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (plainText) {
+      return plainText;
+    }
+  }
+
+  try {
+    const buffer = clipboard.readBuffer('public.utf8-plain-text');
+    const bufferText = buffer.toString('utf8').trim();
+
+    if (bufferText) {
+      return bufferText;
+    }
+  } catch {
+    // Ignore buffer fallback failures.
+  }
+
+  return '';
 }
 
 function getMessages() {
@@ -474,7 +587,7 @@ function createWindow() {
 
   win.loadFile('index.html');
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (!app.isPackaged && process.env.OPEN_DEVTOOLS === '1') {
     win.webContents.openDevTools({ mode: 'detach' });
   }
 
@@ -606,23 +719,87 @@ function trimHistory() {
 function addClipboardText(text) {
   const value = text.trim();
 
-  if (!shouldSaveClipboardText(value)) return;
+  if (!value) return;
 
-  lastText = value;
-
-  const existingItem = clipboardHistory.find((item) => item.text === value);
+  const existingItem = clipboardHistory.find(
+    (item) => item.kind !== 'image' && item.text === value
+  );
 
   if (existingItem) {
+    lastText = value;
+    lastClipboardSignature = `text:${value}`;
+
     clipboardHistory = [
       existingItem,
       ...clipboardHistory.filter((item) => item.id !== existingItem.id)
     ];
-  } else {
-    clipboardHistory = [
-      createHistoryItem(value),
-      ...clipboardHistory
-    ];
+
+    trimHistory();
+
+    if (win) {
+      win.webContents.send('clipboard-history-updated', clipboardHistory);
+    }
+
+    return;
   }
+
+  if (!shouldSaveClipboardText(value)) return;
+
+  lastText = value;
+  lastClipboardSignature = `text:${value}`;
+
+  clipboardHistory = [
+    createHistoryItem(value),
+    ...clipboardHistory
+  ];
+
+  trimHistory();
+
+  if (win) {
+    win.webContents.send('clipboard-history-updated', clipboardHistory);
+  }
+}
+
+function addClipboardImage(image) {
+  if (!image || image.isEmpty()) {
+    return;
+  }
+
+  const imageDataUrl = image.toDataURL();
+
+  if (!imageDataUrl || lastClipboardSignature === `image:${imageDataUrl}`) {
+    return;
+  }
+
+  const existingItem = clipboardHistory.find(
+    (item) => item.kind === 'image' && item.imageDataUrl === imageDataUrl
+  );
+
+  if (existingItem) {
+    lastText = '';
+    lastClipboardSignature = `image:${imageDataUrl}`;
+
+    clipboardHistory = [
+      existingItem,
+      ...clipboardHistory.filter((item) => item.id !== existingItem.id)
+    ];
+
+    trimHistory();
+
+    if (win) {
+      win.webContents.send('clipboard-history-updated', clipboardHistory);
+    }
+
+    return;
+  }
+
+  lastText = '';
+  lastClipboardSignature = `image:${imageDataUrl}`;
+
+  clipboardHistory = [
+    createImageHistoryItem(imageDataUrl),
+    ...clipboardHistory
+  ];
 
   trimHistory();
 
@@ -633,8 +810,13 @@ function addClipboardText(text) {
 
 function watchClipboard() {
   clipboardTimer = setInterval(() => {
-    const text = clipboard.readText();
-    addClipboardText(text);
+    const text = readClipboardText();
+    if (text) {
+      addClipboardText(text);
+      return;
+    }
+
+    addClipboardImage(readClipboardImage());
   }, 800);
 }
 
@@ -642,6 +824,7 @@ app.whenReady().then(() => {
   console.log('App ready');
 
   loadSettings();
+  syncClipboardBaseline();
   applyLoginItemSetting();
   updateState = createUpdateState({
     status: 'idle',
@@ -670,18 +853,44 @@ ipcMain.handle('copy-to-clipboard', (_event, id) => {
     return clipboardHistory;
   }
 
-  clipboard.writeText(item.text);
-  lastText = item.text;
+  if (item.kind === 'image' && item.imageDataUrl) {
+    clipboard.writeImage(nativeImage.createFromDataURL(item.imageDataUrl));
+    lastText = '';
+  } else {
+    const text = String(item.text || '');
+    clipboard.writeText(text);
+    lastText = text;
+  }
 
-  clipboardHistory = [
-    item,
-    ...clipboardHistory.filter((historyItem) => historyItem.id !== id)
-  ];
+  lastClipboardSignature = getClipboardSignature(item);
+
+  if (!item.locked) {
+    const lockedItems = clipboardHistory.filter((historyItem) => historyItem.locked);
+    const unlockedItems = clipboardHistory.filter(
+      (historyItem) => !historyItem.locked && historyItem.id !== id
+    );
+
+    clipboardHistory = [
+      ...lockedItems,
+      item,
+      ...unlockedItems
+    ];
+  }
+
+  if (win) {
+    win.webContents.send('clipboard-history-updated', clipboardHistory);
+  }
 
   return clipboardHistory;
 });
 
 ipcMain.handle('delete-clipboard-item', (_event, id) => {
+  const target = clipboardHistory.find((item) => item.id === id);
+
+  if (!target || target.locked) {
+    return clipboardHistory;
+  }
+
   clipboardHistory = clipboardHistory.filter((item) => item.id !== id);
 
   if (win) {
@@ -712,7 +921,7 @@ ipcMain.handle('toggle-lock-clipboard-item', (_event, id) => {
 
 ipcMain.handle('clear-clipboard-history', () => {
   clipboardHistory = clipboardHistory.filter((item) => item.locked);
-  lastText = clipboard.readText().trim();
+  syncClipboardBaseline();
 
   if (win) {
     win.webContents.send('clipboard-history-updated', clipboardHistory);
@@ -735,6 +944,11 @@ ipcMain.handle('check-for-updates', () => {
 
 ipcMain.handle('open-update-release', () => {
   return openUpdateRelease();
+});
+
+ipcMain.handle('open-bug-report', () => {
+  shell.openExternal('https://github.com/jgmh99/OH-MY-CLIPBOARD/issues/new');
+  return true;
 });
 
 ipcMain.handle('open-login-items-settings', () => {

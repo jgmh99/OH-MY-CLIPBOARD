@@ -33,8 +33,7 @@
     },
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ],
       "icon": "oh-my-clipboard.icns",
       "category": "public.app-category.utilities"

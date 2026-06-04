@@ -2,6 +2,11 @@
 
 `Oh My Clipboard`는 macOS 메뉴바에서 동작하는 Electron 기반 클립보드 히스토리 앱입니다. 최근 복사한 텍스트를 다시 열어 복사할 수 있고, 중요한 항목은 잠가서 유지할 수 있습니다.
 
+## 다운로드
+
+- 최신 릴리즈: [GitHub Releases](https://github.com/jgmh99/OH-MY-CLIPBOARD/releases)
+- 직접 받을 파일: 릴리즈의 `Oh My Clipboard-...-arm64.dmg`
+
 ## 주요 기능
 
 - 메뉴바에서 빠르게 열리는 클립보드 기록 창
@@ -34,7 +39,7 @@ npm run dist
 
 PR에서는 commitlint가 커밋 메시지를 검사합니다. `main`에 들어가는 변경은 conventional commit 형식을 유지해야 릴리즈가 자동으로 올라갑니다.
 
-릴리즈 산출물은 DMG, ZIP, `latest-mac.yml`입니다. 앱 내 업데이트 확인은 GitHub Releases의 최신 버전을 비교하고, 새 버전이 있으면 릴리즈 페이지를 엽니다. 자동 설치나 macOS 서명용 Secrets는 필요하지 않습니다.
+릴리즈 산출물은 DMG 하나만 올립니다. 앱 내 업데이트 확인은 GitHub Releases의 최신 버전을 비교하고, 새 버전이 있으면 릴리즈 페이지를 엽니다. 자동 설치나 macOS 서명용 Secrets는 필요하지 않습니다.
 
 ## 폴더 구조
 

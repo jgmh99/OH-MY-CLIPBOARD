@@ -16,18 +16,6 @@
           {
             "path": "dist/*.dmg",
             "label": "macOS DMG"
-          },
-          {
-            "path": "dist/*.zip",
-            "label": "macOS ZIP"
-          },
-          {
-            "path": "dist/latest-mac.yml",
-            "label": "macOS update metadata"
-          },
-          {
-            "path": "dist/*.blockmap",
-            "label": "Blockmap"
           }
         ]
       }

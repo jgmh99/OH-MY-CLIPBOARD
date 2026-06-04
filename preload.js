@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('clipboardApp', {
   openLoginItemsSettings: () => ipcRenderer.invoke('open-login-items-settings'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   openUpdateRelease: () => ipcRenderer.invoke('open-update-release'),
+  openBugReport: () => ipcRenderer.invoke('open-bug-report'),
 
   onHistoryUpdated: (callback) => {
     ipcRenderer.on('clipboard-history-updated', (_event, history) => {
