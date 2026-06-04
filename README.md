@@ -2,6 +2,13 @@
 
 `Oh My Clipboard`는 macOS 메뉴바에서 동작하는 Electron 기반 클립보드 히스토리 앱입니다. 최근 복사한 텍스트를 다시 열어 복사할 수 있고, 중요한 항목은 잠가서 유지할 수 있습니다.
 
+## 언어별 보기
+
+- [한국어](#korean)
+- [English](#english)
+- [日本語](#japanese)
+- [中文](#chinese)
+
 ## 다운로드
 
 - 최신 릴리즈: [GitHub Releases](https://github.com/jgmh99/OH-MY-CLIPBOARD/releases)
@@ -40,6 +47,35 @@ npm run dist
 PR에서는 commitlint가 커밋 메시지를 검사합니다. `main`에 들어가는 변경은 conventional commit 형식을 유지해야 릴리즈가 자동으로 올라갑니다.
 
 릴리즈 산출물은 DMG 하나만 올립니다. 앱 내 업데이트 확인은 GitHub Releases의 최신 버전을 비교하고, 새 버전이 있으면 릴리즈 페이지를 엽니다. 자동 설치나 macOS 서명용 Secrets는 필요하지 않습니다.
+
+## 업데이트 후 앱이 2개로 보일 때
+
+DMG를 열어서 새 버전을 설치하면, 기존에 설치된 앱과 새로 받은 설치 파일이 같이 보일 수 있습니다. 이건 정상입니다.
+
+- 설치된 앱은 `/Applications/Oh My Clipboard.app` 입니다.
+- 새로 받은 DMG는 설치용 파일입니다.
+- 업데이트할 때는 새 DMG 안의 앱을 `/Applications`에 덮어쓰기 하고, 기존 앱이 뜨면 `Replace`를 선택하세요.
+- 설치가 끝나면 DMG 파일은 지워도 됩니다.
+
+<a id="korean"></a>
+## Korean
+
+`Oh My Clipboard`는 macOS 메뉴바에서 동작하는 Electron 기반 클립보드 히스토리 앱입니다. 최근 복사한 텍스트를 다시 열어 복사할 수 있고, 중요한 항목은 잠가서 유지할 수 있습니다.
+
+<a id="english"></a>
+## English
+
+`Oh My Clipboard` is a macOS menu bar clipboard history app built with Electron. You can reopen recent copied text, lock important items, and quickly access history from the menu bar.
+
+<a id="japanese"></a>
+## Japanese
+
+`Oh My Clipboard` は、macOS のメニューバーで動作する Electron ベースのクリップボード履歴アプリです。最近コピーしたテキストを再度コピーでき、重要な項目はロックして保持できます。
+
+<a id="chinese"></a>
+## Chinese
+
+`Oh My Clipboard` 是一款运行在 macOS 菜单栏中的 Electron 剪贴板历史应用。你可以重新复制最近复制过的文本，并将重要项目锁定保留。
 
 ## 폴더 구조
 
