@@ -42,7 +42,7 @@ window.OhMyClipboardTranslations = {
     descriptions: {
       language: '앱 UI 언어를 선택합니다.',
       launchAtLogin: 'macOS 로그인 시 앱을 자동 실행합니다.',
-      shortcut: '창을 열고 닫는 단축키를 선택합니다.',
+      shortcut: '원하는 키 조합을 직접 눌러 창을 열고 닫는 단축키를 설정합니다.',
       theme: '시스템과 맞추거나 직접 선택합니다.',
       textSize: '기록 리스트에 보이는 텍스트 크기입니다.',
       maxHistoryItems: '잠금 항목을 제외한 최대 저장 개수입니다.',
@@ -70,6 +70,13 @@ window.OhMyClipboardTranslations = {
       languageEn: '영어',
       languageJa: '일본어',
       languageZh: '중국어'
+    },
+    shortcuts: {
+      record: '단축키 입력',
+      recording: '원하는 키 조합을 누르세요',
+      hint: '예: ⌘ + ⇧ + V',
+      reset: '기본값',
+      invalid: 'modifier 키와 일반 키를 함께 눌러야 합니다.'
     },
     updates: {
       groupTitle: '앱 업데이트',
@@ -129,7 +136,7 @@ window.OhMyClipboardTranslations = {
     descriptions: {
       language: 'Choose the app UI language.',
       launchAtLogin: 'Launch automatically when you sign in to macOS.',
-      shortcut: 'Pick the shortcut used to open and close the window.',
+      shortcut: 'Press the key combination you want to use to open and close the window.',
       theme: 'Follow the system appearance or choose one directly.',
       textSize: 'Adjust text size in the history list.',
       maxHistoryItems: 'Maximum saved items excluding locked items.',
@@ -157,6 +164,13 @@ window.OhMyClipboardTranslations = {
       languageEn: 'English',
       languageJa: 'Japanese',
       languageZh: 'Chinese'
+    },
+    shortcuts: {
+      record: 'Set Shortcut',
+      recording: 'Press your key combination',
+      hint: 'Example: ⌘ + ⇧ + V',
+      reset: 'Reset',
+      invalid: 'Use at least one modifier key with a regular key.'
     },
     updates: {
       groupTitle: 'App Updates',
@@ -216,7 +230,7 @@ window.OhMyClipboardTranslations = {
     descriptions: {
       language: 'アプリ UI の言語を選択します。',
       launchAtLogin: 'macOS ログイン時に自動起動します。',
-      shortcut: 'ウィンドウを開閉するショートカットです。',
+      shortcut: 'ウィンドウを開閉するショートカットを直接入力します。',
       theme: 'システムに合わせるか直接選びます。',
       textSize: '履歴リストに表示される文字サイズです。',
       maxHistoryItems: 'ロック項目を除く保存上限です。',
@@ -244,6 +258,13 @@ window.OhMyClipboardTranslations = {
       languageEn: '英語',
       languageJa: '日本語',
       languageZh: '中国語'
+    },
+    shortcuts: {
+      record: 'ショートカット入力',
+      recording: 'キーの組み合わせを押してください',
+      hint: '例: ⌘ + ⇧ + V',
+      reset: '初期値',
+      invalid: '修飾キーと通常キーを一緒に押してください。'
     },
     updates: {
       groupTitle: 'アプリのアップデート',
@@ -303,7 +324,7 @@ window.OhMyClipboardTranslations = {
     descriptions: {
       language: '选择应用界面语言。',
       launchAtLogin: '登录 macOS 时自动启动。',
-      shortcut: '用于打开和关闭窗口的快捷键。',
+      shortcut: '直接按下你想用来打开和关闭窗口的快捷键组合。',
       theme: '跟随系统外观或手动选择。',
       textSize: '历史列表中文字的显示大小。',
       maxHistoryItems: '除锁定项目外的最大保存数量。',
@@ -331,6 +352,13 @@ window.OhMyClipboardTranslations = {
       languageEn: '英语',
       languageJa: '日语',
       languageZh: '中文'
+    },
+    shortcuts: {
+      record: '设置快捷键',
+      recording: '按下你的快捷键组合',
+      hint: '例如：⌘ + ⇧ + V',
+      reset: '恢复默认',
+      invalid: '请至少同时按下一个修饰键和一个普通键。'
     },
     updates: {
       groupTitle: '应用更新',

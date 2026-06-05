@@ -25,13 +25,8 @@ window.OhMyClipboardSettingsConfig = [
     group: 'general',
     key: 'shortcut',
     type: 'string',
-    control: 'dropdown',
-    options: [
-      { value: 'CommandOrControl+Shift+V', labelKey: 'shortcutPrimary' },
-      { value: 'CommandOrControl+Option+V', labelKey: 'shortcutOption' },
-      { value: 'CommandOrControl+Shift+Space', labelKey: 'shortcutSpace' },
-      { value: 'CommandOrControl+Shift+C', labelKey: 'shortcutCopy' }
-    ]
+    control: 'shortcut',
+    options: []
   },
   {
     group: 'general',

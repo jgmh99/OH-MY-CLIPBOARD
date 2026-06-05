@@ -25,6 +25,7 @@
 
   const controlRegistry = {};
   const updateUi = {};
+  let activeShortcutRecorder = null;
   let currentSettings = {
     theme: 'system',
     textSize: 13,
@@ -116,11 +117,115 @@
     document.documentElement.style.setProperty('--clipboard-text-size', `${settings.textSize || 13}px`);
   }
 
-  function createNativeSelect(config) {
+  function createNativeField(config) {
+    if (config.control === 'shortcut') {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'native-select';
+      input.id = config.key;
+      return input;
+    }
+
     const select = document.createElement('select');
     select.className = 'native-select';
     select.id = config.key;
     return select;
+  }
+
+  function getShortcutDisplayParts(value) {
+    if (!value) {
+      return [];
+    }
+
+    const tokenMap = {
+      Command: '⌘',
+      Control: '⌃',
+      Option: '⌥',
+      Shift: '⇧',
+      Space: 'Space',
+      Enter: '↩',
+      Escape: 'Esc',
+      Tab: '⇥',
+      Backspace: '⌫',
+      Delete: '⌦',
+      Up: '↑',
+      Down: '↓',
+      Left: '←',
+      Right: '→',
+      Home: 'Home',
+      End: 'End',
+      PageUp: 'PgUp',
+      PageDown: 'PgDn'
+    };
+
+    return String(value)
+      .split('+')
+      .map((token) => token.trim())
+      .filter(Boolean)
+      .map((token) => tokenMap[token] || token.toUpperCase());
+  }
+
+  function buildShortcutMarkup(value) {
+    return getShortcutDisplayParts(value)
+      .map((token) => `<span class="shortcut-keycap">${token}</span>`)
+      .join('<span class="shortcut-plus">+</span>');
+  }
+
+  function eventToShortcut(event) {
+    const modifiers = [];
+
+    if (event.metaKey) modifiers.push('Command');
+    if (event.ctrlKey) modifiers.push('Control');
+    if (event.altKey) modifiers.push('Option');
+    if (event.shiftKey) modifiers.push('Shift');
+
+    const modifierOnlyKeys = new Set([
+      'Meta',
+      'Control',
+      'Alt',
+      'Shift'
+    ]);
+
+    if (modifierOnlyKeys.has(event.key)) {
+      return null;
+    }
+
+    let key = '';
+    const code = event.code || '';
+
+    if (/^Key[A-Z]$/.test(code)) {
+      key = code.slice(-1);
+    } else if (/^Digit[0-9]$/.test(code)) {
+      key = code.slice(-1);
+    } else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) {
+      key = code.toUpperCase();
+    } else {
+      const keyAliasMap = {
+        ' ': 'Space',
+        Spacebar: 'Space',
+        Enter: 'Enter',
+        Escape: 'Escape',
+        Tab: 'Tab',
+        Backspace: 'Backspace',
+        Delete: 'Delete',
+        ArrowUp: 'Up',
+        ArrowDown: 'Down',
+        ArrowLeft: 'Left',
+        ArrowRight: 'Right',
+        Home: 'Home',
+        End: 'End',
+        PageUp: 'PageUp',
+        PageDown: 'PageDown'
+      };
+
+      key = keyAliasMap[event.key] || keyAliasMap[code] || '';
+    }
+
+    if (!key || !modifiers.length) {
+      return null;
+    }
+
+    return [...modifiers, key].join('+');
   }
 
   function createRow(config) {
@@ -135,8 +240,8 @@
     `;
 
     const controlSlot = row.querySelector('.setting-control');
-    const nativeSelect = createNativeSelect(config);
-    controlSlot.appendChild(nativeSelect);
+    const nativeField = createNativeField(config);
+    controlSlot.appendChild(nativeField);
 
     if (config.control === 'toggle') {
       const toggleWrap = document.createElement('div');
@@ -146,7 +251,7 @@
 
       controlRegistry[config.key] = {
         config,
-        nativeSelect,
+        nativeSelect: nativeField,
         kind: 'toggle',
         root: toggleWrap,
         button: toggleWrap.querySelector('.toggle')
@@ -161,9 +266,32 @@
 
       controlRegistry[config.key] = {
         config,
-        nativeSelect,
+        nativeSelect: nativeField,
         kind: 'segmented',
         root: segmented
+      };
+      return row;
+    }
+
+    if (config.control === 'shortcut') {
+      const shortcut = document.createElement('div');
+      shortcut.className = 'shortcut-input';
+      shortcut.innerHTML = `
+        <button class="shortcut-trigger" type="button">
+          <span class="shortcut-value"></span>
+        </button>
+        <button class="shortcut-reset" type="button"></button>
+      `;
+      controlSlot.appendChild(shortcut);
+
+      controlRegistry[config.key] = {
+        config,
+        nativeSelect: nativeField,
+        kind: 'shortcut',
+        root: shortcut,
+        trigger: shortcut.querySelector('.shortcut-trigger'),
+        value: shortcut.querySelector('.shortcut-value'),
+        reset: shortcut.querySelector('.shortcut-reset')
       };
       return row;
     }
@@ -181,7 +309,7 @@
 
     controlRegistry[config.key] = {
       config,
-      nativeSelect,
+      nativeSelect: nativeField,
       kind: 'dropdown',
       root: dropdown,
       trigger: dropdown.querySelector('.dropdown-trigger'),
@@ -275,6 +403,10 @@
   }
 
   function populateNativeSelect(control, language) {
+    if (control.kind === 'shortcut') {
+      return;
+    }
+
     const messages = getMessages(language);
     const previousValue = control.nativeSelect.value;
 
@@ -360,6 +492,45 @@
     });
   }
 
+  function setShortcutRecording(control, isRecording) {
+    if (isRecording) {
+      activeShortcutRecorder = control.config.key;
+    } else if (activeShortcutRecorder === control.config.key) {
+      activeShortcutRecorder = null;
+    }
+
+    control.root.classList.toggle('is-recording', isRecording);
+    control.trigger.setAttribute('aria-pressed', isRecording ? 'true' : 'false');
+    syncShortcut(control);
+  }
+
+  function syncShortcut(control, invalidMessage = '') {
+    if (control.kind !== 'shortcut') {
+      return;
+    }
+
+    const messages = getMessages();
+    const isRecording = activeShortcutRecorder === control.config.key;
+    const shortcutValue = control.nativeSelect.value || '';
+
+    control.value.innerHTML = shortcutValue
+      ? buildShortcutMarkup(shortcutValue)
+      : `<span class="shortcut-placeholder">${messages.shortcuts.record}</span>`;
+
+    control.reset.textContent = messages.shortcuts.reset;
+    control.reset.disabled = shortcutValue === '';
+    control.trigger.title = shortcutValue || messages.shortcuts.hint;
+
+    if (invalidMessage) {
+      document.getElementById(`${control.config.key}-desc`).textContent = invalidMessage;
+      return;
+    }
+
+    document.getElementById(`${control.config.key}-desc`).textContent = isRecording
+      ? messages.shortcuts.recording
+      : `${messages.descriptions.shortcut} ${messages.shortcuts.hint}`;
+  }
+
   function getUpdateStatusText(updateState, messages) {
     switch (updateState.status) {
       case 'checking':
@@ -439,6 +610,27 @@
         });
       }
 
+      if (control.kind === 'shortcut') {
+        control.trigger.addEventListener('click', () => {
+          const isRecording = activeShortcutRecorder === control.config.key;
+
+          Object.values(controlRegistry).forEach((candidate) => {
+            if (candidate.kind === 'shortcut') {
+              setShortcutRecording(candidate, false);
+            }
+          });
+
+          if (!isRecording) {
+            setShortcutRecording(control, true);
+          }
+        });
+
+        control.reset.addEventListener('click', () => {
+          control.nativeSelect.value = 'Command+Shift+V';
+          control.nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      }
+
       if (control.kind === 'toggle') {
         control.button.addEventListener('click', () => {
           control.nativeSelect.value = control.nativeSelect.value === 'true' ? 'false' : 'true';
@@ -451,8 +643,41 @@
         syncDropdown(control);
         syncSegmented(control);
         syncToggle(control);
+        syncShortcut(control);
       });
     });
+
+    window.addEventListener('keydown', (event) => {
+      if (!activeShortcutRecorder) {
+        return;
+      }
+
+      const control = controlRegistry[activeShortcutRecorder];
+
+      if (!control) {
+        activeShortcutRecorder = null;
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (event.key === 'Escape') {
+        setShortcutRecording(control, false);
+        return;
+      }
+
+      const nextShortcut = eventToShortcut(event);
+
+      if (!nextShortcut) {
+        syncShortcut(control, getMessages().shortcuts.invalid);
+        return;
+      }
+
+      setShortcutRecording(control, false);
+      control.nativeSelect.value = nextShortcut;
+      control.nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }, true);
   }
 
   function applyLocalizedText(settings) {
@@ -483,7 +708,9 @@
 
     settingsConfig.forEach((config) => {
       document.getElementById(`${config.key}-label`).textContent = messages.labels[config.key];
-      document.getElementById(`${config.key}-desc`).textContent = messages.descriptions[config.key];
+      document.getElementById(`${config.key}-desc`).textContent = config.key === 'shortcut'
+        ? `${messages.descriptions[config.key]} ${messages.shortcuts.hint}`
+        : messages.descriptions[config.key];
     });
 
     renderUpdateState(currentUpdateState);
@@ -604,6 +831,7 @@
       renderSegmented(control);
       syncToggle(control);
       syncSegmented(control);
+      syncShortcut(control);
     });
 
     renderHistory(currentHistory);
@@ -675,6 +903,13 @@
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.dropdown')) {
       closeAllDropdowns();
+    }
+
+    if (activeShortcutRecorder && !event.target.closest('.shortcut-input')) {
+      const control = controlRegistry[activeShortcutRecorder];
+      if (control) {
+        setShortcutRecording(control, false);
+      }
     }
   });
 

@@ -31,12 +31,6 @@ const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'zh'];
 const SETTINGS_OPTIONS = {
   launchAtLogin: [true, false],
   maxHistoryItems: [10, 20, 50, 100],
-  shortcut: [
-    'CommandOrControl+Shift+V',
-    'CommandOrControl+Option+V',
-    'CommandOrControl+Shift+Space',
-    'CommandOrControl+Shift+C'
-  ],
   ignoreDuplicates: [true, false],
   minTextLength: [1, 2, 5, 10, 20, 50],
   maxTextLength: [200, 500, 1000, 3000, 5000, 10000],
@@ -107,7 +101,7 @@ function createTrayIcon() {
 const defaultSettings = {
   launchAtLogin: false,
   maxHistoryItems: 20,
-  shortcut: 'CommandOrControl+Shift+V',
+  shortcut: 'Command+Shift+V',
   ignoreDuplicates: true,
   minTextLength: 1,
   maxTextLength: 5000,
@@ -315,6 +309,104 @@ function sanitizeString(value, fallback = '') {
   return fallback;
 }
 
+function sanitizeShortcutValue(value, fallback) {
+  const rawValue = sanitizeString(value, fallback);
+
+  if (!rawValue) {
+    return fallback;
+  }
+
+  const modifierAliasMap = {
+    cmd: 'Command',
+    command: 'Command',
+    commandorcontrol: process.platform === 'darwin' ? 'Command' : 'Control',
+    ctrl: 'Control',
+    control: 'Control',
+    alt: 'Option',
+    option: 'Option',
+    opt: 'Option',
+    shift: 'Shift'
+  };
+  const modifierOrder = ['Command', 'Control', 'Option', 'Shift'];
+  const keyAliasMap = {
+    return: 'Enter',
+    enter: 'Enter',
+    esc: 'Escape',
+    escape: 'Escape',
+    space: 'Space',
+    spacebar: 'Space',
+    tab: 'Tab',
+    delete: 'Delete',
+    del: 'Delete',
+    backspace: 'Backspace',
+    up: 'Up',
+    down: 'Down',
+    left: 'Left',
+    right: 'Right',
+    home: 'Home',
+    end: 'End',
+    pageup: 'PageUp',
+    pagedown: 'PageDown'
+  };
+
+  const tokens = rawValue
+    .split('+')
+    .map((token) => token.trim())
+    .filter(Boolean);
+
+  if (!tokens.length) {
+    return fallback;
+  }
+
+  const modifiers = new Set();
+  let key = null;
+
+  tokens.forEach((token) => {
+    const normalizedToken = token.toLowerCase();
+    const modifier = modifierAliasMap[normalizedToken];
+
+    if (modifier) {
+      modifiers.add(modifier);
+      return;
+    }
+
+    if (key) {
+      key = null;
+      return;
+    }
+
+    const aliasedKey = keyAliasMap[normalizedToken];
+
+    if (aliasedKey) {
+      key = aliasedKey;
+      return;
+    }
+
+    if (/^[a-z]$/i.test(token)) {
+      key = token.toUpperCase();
+      return;
+    }
+
+    if (/^[0-9]$/.test(token)) {
+      key = token;
+      return;
+    }
+
+    if (/^f([1-9]|1[0-9]|2[0-4])$/i.test(token)) {
+      key = token.toUpperCase();
+    }
+  });
+
+  if (!key || !modifiers.size) {
+    return fallback;
+  }
+
+  return [
+    ...modifierOrder.filter((modifier) => modifiers.has(modifier)),
+    key
+  ].join('+');
+}
+
 function sanitizeSelectValue(key, value, fallback) {
   const allowedValues = SETTINGS_OPTIONS[key];
 
@@ -351,8 +443,7 @@ function sanitizeSettings(nextSettings) {
       nextSettings.maxHistoryItems,
       defaultSettings.maxHistoryItems
     ),
-    shortcut: sanitizeSelectValue(
-      'shortcut',
+    shortcut: sanitizeShortcutValue(
       nextSettings.shortcut,
       defaultSettings.shortcut
     ),
@@ -452,6 +543,18 @@ function registerShortcut() {
   const success = globalShortcut.register(settings.shortcut, () => {
     toggleWindow();
   });
+
+  if (!success && settings.shortcut !== defaultSettings.shortcut) {
+    settings = {
+      ...settings,
+      shortcut: defaultSettings.shortcut
+    };
+    saveSettings();
+    globalShortcut.register(settings.shortcut, () => {
+      toggleWindow();
+    });
+    syncRendererState();
+  }
 
   console.log('Shortcut registered:', settings.shortcut, success);
 }
