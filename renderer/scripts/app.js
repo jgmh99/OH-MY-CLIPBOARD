@@ -16,6 +16,7 @@
   const settingsHeaderCopy = document.getElementById('settings-header-copy');
   const historySearchInput = document.getElementById('history-search');
   const historySearchClear = document.getElementById('history-search-clear');
+  const historySidebarButtons = document.querySelectorAll('.history-sidebar__item');
 
   const groupOrder = ['general', 'history', 'behavior'];
   const groupedConfig = groupOrder.map((group) => ({
@@ -743,6 +744,10 @@
       const content = document.createElement('div');
       content.className = 'history-item__content';
 
+      const icon = document.createElement('div');
+      icon.className = 'history-item__icon';
+      icon.textContent = item.locked ? '🔒' : '⌘';
+
       const preview = document.createElement('div');
       preview.className = 'history-item__preview';
 
@@ -768,10 +773,11 @@
         const value = document.createElement('span');
         value.className = 'history-item__value';
         value.textContent = previewText;
-        copyButton.appendChild(typeLabel);
         copyButton.appendChild(value);
+        copyButton.appendChild(typeLabel);
       }
 
+      content.appendChild(icon);
       preview.appendChild(copyButton);
       content.appendChild(preview);
       main.appendChild(content);
@@ -871,6 +877,17 @@
   });
 
   openSettingsButton.addEventListener('click', showSettingsView);
+  historySidebarButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (button.textContent.trim() === '설정') {
+        showSettingsView();
+        return;
+      }
+
+      historySidebarButtons.forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+    });
+  });
   backButton.addEventListener('click', showHistoryView);
   openLoginSettings.addEventListener('click', () => {
     window.clipboardApp.openLoginItemsSettings();
