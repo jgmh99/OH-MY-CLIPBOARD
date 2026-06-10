@@ -12,6 +12,7 @@
     "start": "electron .",
     "dist": "electron-builder --mac --publish never",
     "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run",
     "lint:commits": "commitlint --from origin/main --to HEAD"
   },
   "devDependencies": {

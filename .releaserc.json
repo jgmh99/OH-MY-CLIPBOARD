@@ -1,12 +1,13 @@
 {
   "branches": ["main"],
+  "tagFormat": "v${version}",
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "npm version --no-git-tag-version --allow-same-version ${nextRelease.version} && npm run dist"
+        "prepareCmd": "node scripts/prepare-release.js ${nextRelease.version} && npm run dist"
       }
     ],
     [
