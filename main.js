@@ -7,6 +7,7 @@ const {
   ipcMain,
   Menu,
   globalShortcut,
+  screen,
   shell
 } = require('electron');
 
@@ -680,8 +681,8 @@ function openUpdateRelease() {
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 390,
-    height: 540,
+    width: 760,
+    height: 620,
     show: false,
     frame: false,
     resizable: false,
@@ -821,6 +822,27 @@ function getTrayAnchorPosition(windowBounds) {
   };
 }
 
+function clampWindowPosition(position, windowBounds) {
+  const display = screen.getDisplayMatching({
+    x: position.x,
+    y: position.y,
+    width: windowBounds.width,
+    height: windowBounds.height
+  });
+  const workArea = display.workArea;
+
+  return {
+    x: Math.min(
+      Math.max(position.x, workArea.x),
+      workArea.x + workArea.width - windowBounds.width
+    ),
+    y: Math.min(
+      Math.max(position.y, workArea.y),
+      workArea.y + workArea.height - windowBounds.height
+    )
+  };
+}
+
 function showWindow() {
   if (!win || !tray) return;
 
@@ -831,9 +853,10 @@ function showWindow() {
   const { x, y } = hasSavedWindowPosition
     ? { x: settings.windowX, y: settings.windowY }
     : getTrayAnchorPosition(windowBounds);
+  const position = clampWindowPosition({ x, y }, windowBounds);
 
   isProgrammaticWindowMove = true;
-  win.setPosition(x, y, false);
+  win.setPosition(position.x, position.y, false);
   setTimeout(() => {
     isProgrammaticWindowMove = false;
   }, 0);
