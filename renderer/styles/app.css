@@ -109,6 +109,7 @@ select {
   background: transparent;
   padding: 0;
   margin: 0;
+  -webkit-app-region: drag;
 }
 
 .screen-header__leading {
@@ -202,6 +203,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 .history-item__text {
   border: 0;
   cursor: pointer;
+  -webkit-app-region: no-drag;
 }
 
 .icon-button,
@@ -396,6 +398,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   color: var(--text);
   font-size: 13px;
   outline: none;
+  -webkit-app-region: no-drag;
 }
 
 .search-field input::placeholder {

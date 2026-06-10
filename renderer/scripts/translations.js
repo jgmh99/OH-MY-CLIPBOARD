@@ -36,6 +36,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '중복 저장 방지',
       minTextLength: '최소 텍스트 길이',
       maxTextLength: '최대 텍스트 길이',
+      popupOffsetX: '창 가로 위치',
+      popupOffsetY: '창 세로 위치',
       pauseTracking: '클립보드 추적',
       autoHideOnBlur: '포커스 해제 시 자동 닫기'
     },
@@ -49,6 +51,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '같은 텍스트를 연속 저장하지 않습니다.',
       minTextLength: '이 길이보다 짧은 텍스트는 무시합니다.',
       maxTextLength: '이 길이보다 긴 텍스트는 무시합니다.',
+      popupOffsetX: '트레이 아이콘 기준 좌우 위치를 조정합니다.',
+      popupOffsetY: '트레이 아이콘 기준 상하 위치를 조정합니다.',
       pauseTracking: '클립보드 감시를 잠시 멈추거나 다시 시작합니다.',
       autoHideOnBlur: '다른 곳을 클릭하면 창을 자동으로 닫습니다.'
     },
@@ -130,6 +134,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: 'Ignore Duplicates',
       minTextLength: 'Minimum Text Length',
       maxTextLength: 'Maximum Text Length',
+      popupOffsetX: 'Window Horizontal Position',
+      popupOffsetY: 'Window Vertical Position',
       pauseTracking: 'Clipboard Tracking',
       autoHideOnBlur: 'Auto Hide on Blur'
     },
@@ -143,6 +149,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: 'Avoid saving the same text repeatedly in sequence.',
       minTextLength: 'Ignore texts shorter than this length.',
       maxTextLength: 'Ignore texts longer than this length.',
+      popupOffsetX: 'Adjust left/right position from the tray icon.',
+      popupOffsetY: 'Adjust up/down position from the tray icon.',
       pauseTracking: 'Pause or resume clipboard monitoring.',
       autoHideOnBlur: 'Close the window automatically when focus leaves.'
     },
@@ -224,6 +232,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '重複を無視',
       minTextLength: '最小テキスト長',
       maxTextLength: '最大テキスト長',
+      popupOffsetX: 'ウィンドウ横位置',
+      popupOffsetY: 'ウィンドウ縦位置',
       pauseTracking: 'クリップボード追跡',
       autoHideOnBlur: 'フォーカス解除で自動的に閉じる'
     },
@@ -237,6 +247,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '同じテキストを連続保存しません。',
       minTextLength: 'この長さより短いテキストは無視します。',
       maxTextLength: 'この長さより長いテキストは無視します。',
+      popupOffsetX: 'トレイアイコン基準の左右位置を調整します。',
+      popupOffsetY: 'トレイアイコン基準の上下位置を調整します。',
       pauseTracking: 'クリップボード監視を停止または再開します。',
       autoHideOnBlur: '他の場所をクリックすると自動で閉じます。'
     },
@@ -318,6 +330,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '忽略重复',
       minTextLength: '最小文本长度',
       maxTextLength: '最大文本长度',
+      popupOffsetX: '窗口水平位置',
+      popupOffsetY: '窗口垂直位置',
       pauseTracking: '剪贴板监听',
       autoHideOnBlur: '失焦时自动隐藏'
     },
@@ -331,6 +345,8 @@ window.OhMyClipboardTranslations = {
       ignoreDuplicates: '不要连续保存相同文本。',
       minTextLength: '短于此长度的文本将被忽略。',
       maxTextLength: '长于此长度的文本将被忽略。',
+      popupOffsetX: '调整相对托盘图标的左右位置。',
+      popupOffsetY: '调整相对托盘图标的上下位置。',
       pauseTracking: '暂停或恢复剪贴板监听。',
       autoHideOnBlur: '点击其他位置时自动关闭窗口。'
     },

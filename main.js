@@ -22,6 +22,7 @@ let lastText = '';
 let lastClipboardSignature = '';
 let clipboardTimer = null;
 let updateState = null;
+let isProgrammaticWindowMove = false;
 
 const TRAY_ICON_PATH = path.join(__dirname, 'icons', 'icon.png');
 const APP_ICON_PATH = path.join(__dirname, 'icons', 'oh-my-clipboard.icns');
@@ -105,6 +106,8 @@ const defaultSettings = {
   ignoreDuplicates: true,
   minTextLength: 1,
   maxTextLength: 5000,
+  windowX: null,
+  windowY: null,
   pauseTracking: false,
   autoHideOnBlur: true,
   theme: 'system',
@@ -462,6 +465,12 @@ function sanitizeSettings(nextSettings) {
       nextSettings.maxTextLength,
       defaultSettings.maxTextLength
     ),
+    windowX: Number.isFinite(Number(nextSettings.windowX))
+      ? Math.round(Number(nextSettings.windowX))
+      : defaultSettings.windowX,
+    windowY: Number.isFinite(Number(nextSettings.windowY))
+      ? Math.round(Number(nextSettings.windowY))
+      : defaultSettings.windowY,
     pauseTracking: sanitizeSelectValue(
       'pauseTracking',
       nextSettings.pauseTracking,
@@ -676,7 +685,7 @@ function createWindow() {
     show: false,
     frame: false,
     resizable: false,
-    movable: false,
+    movable: true,
     fullscreenable: false,
     skipTaskbar: true,
     alwaysOnTop: true,
@@ -698,6 +707,31 @@ function createWindow() {
     if (settings.autoHideOnBlur) {
       win.hide();
     }
+  });
+
+  win.on('move', () => {
+    if (!tray || isProgrammaticWindowMove || !win.isVisible()) {
+      return;
+    }
+
+    const windowBounds = win.getBounds();
+    const nextWindowX = Math.round(windowBounds.x);
+    const nextWindowY = Math.round(windowBounds.y);
+
+    if (
+      nextWindowX === settings.windowX &&
+      nextWindowY === settings.windowY
+    ) {
+      return;
+    }
+
+    settings = {
+      ...settings,
+      windowX: nextWindowX,
+      windowY: nextWindowY
+    };
+    saveSettings();
+    syncRendererState();
   });
 }
 
@@ -770,16 +804,39 @@ function createTray() {
   console.log('Tray created');
 }
 
+function getTrayAnchorPosition(windowBounds) {
+  const trayBounds = tray.getBounds();
+
+  return {
+    x: Math.round(
+      trayBounds.x +
+        trayBounds.width / 2 -
+        windowBounds.width / 2
+    ),
+    y: Math.round(
+      trayBounds.y +
+        trayBounds.height +
+        6
+    )
+  };
+}
+
 function showWindow() {
   if (!win || !tray) return;
 
-  const trayBounds = tray.getBounds();
   const windowBounds = win.getBounds();
+  const hasSavedWindowPosition =
+    Number.isFinite(settings.windowX) &&
+    Number.isFinite(settings.windowY);
+  const { x, y } = hasSavedWindowPosition
+    ? { x: settings.windowX, y: settings.windowY }
+    : getTrayAnchorPosition(windowBounds);
 
-  const x = Math.round(trayBounds.x + trayBounds.width / 2 - windowBounds.width / 2);
-  const y = Math.round(trayBounds.y + trayBounds.height + 6);
-
+  isProgrammaticWindowMove = true;
   win.setPosition(x, y, false);
+  setTimeout(() => {
+    isProgrammaticWindowMove = false;
+  }, 0);
   win.show();
   win.focus();
 
