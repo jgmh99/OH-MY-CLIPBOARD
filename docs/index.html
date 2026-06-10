@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Oh My Clipboard</title>
+    <meta
+      name="description"
+      content="macOS 메뉴바에서 빠르게 열리는 클립보드 히스토리 앱, Oh My Clipboard."
+    />
+    <meta property="og:title" content="Oh My Clipboard" />
+    <meta
+      property="og:description"
+      content="빠르고 가벼운 macOS 메뉴바 클립보드 히스토리 앱."
+    />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:image"
+      content="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-512.png"
+    />
+    <link
+      rel="icon"
+      href="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-32.png"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      as="style"
+      crossorigin
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="aurora aurora--left"></div>
+      <div class="aurora aurora--right"></div>
+
+      <header class="topbar">
+        <a class="brand" href="https://github.com/jgmh99/OH-MY-CLIPBOARD">
+          <img
+            src="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-64.png"
+            alt="Oh My Clipboard icon"
+            class="brand__icon"
+          />
+          <div>
+            <span class="brand__eyebrow">macOS Menu Bar App</span>
+            <strong class="brand__name">Oh My Clipboard</strong>
+          </div>
+        </a>
+
+        <nav class="topbar__actions">
+          <a class="button button--ghost" href="#features">기능</a>
+          <a
+            class="button button--ghost"
+            href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases"
+          >
+            릴리즈
+          </a>
+          <a
+            class="button button--primary"
+            href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
+          >
+            다운로드
+          </a>
+        </nav>
+      </header>
+
+      <main class="content">
+        <section class="hero">
+          <div class="hero__copy glass-panel">
+            <p class="section-kicker">Clipboard, without friction</p>
+            <h1>
+              복붙 기록을
+              <span>메뉴바에서 바로</span>
+              꺼내 쓰는 방식
+            </h1>
+            <p class="hero__body">
+              Oh My Clipboard는 macOS 메뉴바에 머무르며 최근 복사한 텍스트,
+              고정 항목, 다국어 UI, 빠른 설정 접근을 한 화면에 정리해주는
+              클립보드 히스토리 앱입니다.
+            </p>
+
+            <div class="hero__actions">
+              <a
+                class="button button--primary"
+                href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
+              >
+                최신 버전 받기
+              </a>
+              <a
+                class="button button--secondary"
+                href="https://github.com/jgmh99/OH-MY-CLIPBOARD"
+              >
+                GitHub 보기
+              </a>
+            </div>
+
+            <ul class="hero__stats">
+              <li>
+                <strong>Menu Bar</strong>
+                <span>앱 전환 없이 즉시 접근</span>
+              </li>
+              <li>
+                <strong>Multi-language</strong>
+                <span>한국어, English, 日本語, 中文</span>
+              </li>
+              <li>
+                <strong>Release-based</strong>
+                <span>GitHub Releases로 바로 배포</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="hero__visual">
+            <div class="mockup glass-panel">
+              <div class="mockup__topbar">
+                <div class="mockup__dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+                <span class="mockup__title">Oh My Clipboard</span>
+                <span class="mockup__badge">Live History</span>
+              </div>
+
+              <div class="mockup__body">
+                <aside class="mockup__sidebar">
+                  <button class="mockup__pill mockup__pill--active">최근</button>
+                  <button class="mockup__pill">고정됨</button>
+                  <button class="mockup__pill">설정</button>
+                </aside>
+
+                <div class="mockup__panel">
+                  <div class="mockup__search">히스토리 검색</div>
+
+                  <div class="history-card">
+                    <div class="history-card__icon">⌘</div>
+                    <div class="history-card__copy">
+                      <strong>스크린샷 정리 체크리스트</strong>
+                      <span>2분 전 복사됨</span>
+                    </div>
+                    <button class="history-card__action">복사</button>
+                  </div>
+
+                  <div class="history-card history-card--muted">
+                    <div class="history-card__icon">🔒</div>
+                    <div class="history-card__copy">
+                      <strong>고정된 로그인 메모</strong>
+                      <span>항상 보관됨</span>
+                    </div>
+                    <button class="history-card__action">열기</button>
+                  </div>
+
+                  <div class="mockup__settings">
+                    <div>
+                      <span>클립보드 추적</span>
+                      <small>메뉴바에서 즉시 토글</small>
+                    </div>
+                    <div class="toggle toggle--on">
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="floating-note glass-panel">
+              <span class="floating-note__label">왜 쓰는지</span>
+              <p>
+                여러 번 복사했던 텍스트를 다시 찾기 위해 문서를 뒤지지 않도록
+                설계했습니다.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="feature-strip" id="features">
+          <article class="feature-card glass-panel">
+            <span class="feature-card__index">01</span>
+            <h2>빠른 접근</h2>
+            <p>
+              메뉴바에서 바로 열리고, 필요한 텍스트를 다시 복사하는 데 집중한
+              구조입니다.
+            </p>
+          </article>
+
+          <article class="feature-card glass-panel">
+            <span class="feature-card__index">02</span>
+            <h2>고정과 정리</h2>
+            <p>
+              중요한 항목은 잠가두고, 불필요한 기록은 바로 지울 수 있습니다.
+            </p>
+          </article>
+
+          <article class="feature-card glass-panel">
+            <span class="feature-card__index">03</span>
+            <h2>설정 단순화</h2>
+            <p>
+              토글, 드롭다운, 테마 선택을 한 화면에서 빠르게 조정할 수
+              있습니다.
+            </p>
+          </article>
+        </section>
+
+        <section class="details">
+          <article class="details__panel glass-panel">
+            <p class="section-kicker">What it includes</p>
+            <h2>핵심 기능</h2>
+            <ul class="feature-list">
+              <li>최근 클립보드 텍스트 히스토리</li>
+              <li>항목 복사, 삭제, 잠금</li>
+              <li>다국어 UI 지원</li>
+              <li>테마 및 동작 설정</li>
+              <li>GitHub Releases 기반 업데이트 확인</li>
+            </ul>
+          </article>
+
+          <article class="details__panel glass-panel">
+            <p class="section-kicker">Installation</p>
+            <h2>설치 방식</h2>
+            <ol class="steps">
+              <li>최신 릴리즈에서 DMG를 받습니다.</li>
+              <li>`Oh My Clipboard.app`을 `/Applications`에 복사합니다.</li>
+              <li>메뉴바에서 실행 후 바로 사용합니다.</li>
+            </ol>
+          </article>
+        </section>
+
+        <section class="cta glass-panel">
+          <div>
+            <p class="section-kicker">Ready to use</p>
+            <h2>지금 바로 메뉴바에 올릴 수 있습니다.</h2>
+            <p>
+              소개 페이지는 GitHub Pages로 배포하고, 앱 배포는 GitHub Releases로
+              유지하는 구조입니다.
+            </p>
+          </div>
+
+          <div class="cta__actions">
+            <a
+              class="button button--primary"
+              href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
+            >
+              다운로드
+            </a>
+            <a
+              class="button button--secondary"
+              href="https://github.com/jgmh99/OH-MY-CLIPBOARD"
+            >
+              저장소 보기
+            </a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

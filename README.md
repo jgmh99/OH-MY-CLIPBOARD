@@ -11,6 +11,7 @@
 
 ## 다운로드
 
+- 소개 페이지: https://jgmh99.github.io/OH-MY-CLIPBOARD/
 - 최신 릴리즈: [GitHub Releases](https://github.com/jgmh99/OH-MY-CLIPBOARD/releases)
 - 직접 받을 파일: 릴리즈의 `Oh My Clipboard-...-arm64.dmg`
 
