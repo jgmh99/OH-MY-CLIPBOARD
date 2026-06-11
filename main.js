@@ -30,6 +30,19 @@ const APP_ICON_PATH = path.join(__dirname, 'icons', 'oh-my-clipboard.icns');
 const RELEASES_API_URL = 'https://api.github.com/repos/jgmh99/OH-MY-CLIPBOARD/releases/latest';
 
 const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'zh'];
+const IMAGE_FILE_EXTENSIONS = new Set([
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.bmp',
+  '.tif',
+  '.tiff',
+  '.heic',
+  '.heif',
+  '.ico'
+]);
 const SETTINGS_OPTIONS = {
   launchAtLogin: [true, false],
   maxHistoryItems: [10, 20, 50, 100],
@@ -210,19 +223,19 @@ function getClipboardSignature(item) {
 }
 
 function syncClipboardBaseline() {
-  const text = readClipboardText();
-
-  if (text) {
-    lastText = text;
-    lastClipboardSignature = `text:${text}`;
-    return;
-  }
-
   const image = readClipboardImage();
 
   if (image && !image.isEmpty()) {
     lastText = '';
     lastClipboardSignature = `image:${image.toDataURL()}`;
+    return;
+  }
+
+  const text = readClipboardText();
+
+  if (text) {
+    lastText = text;
+    lastClipboardSignature = `text:${text}`;
     return;
   }
 
@@ -234,10 +247,67 @@ function readClipboardImage() {
   const image = clipboard.readImage();
 
   if (image.isEmpty()) {
-    return null;
+    return readClipboardImageFile();
   }
 
   return image;
+}
+
+function decodeClipboardBuffer(format) {
+  try {
+    const buffer = clipboard.readBuffer(format);
+
+    if (!buffer || !buffer.length) {
+      return '';
+    }
+
+    return buffer
+      .toString('utf8')
+      .replace(/\0/g, '\n')
+      .trim();
+  } catch {
+    return '';
+  }
+}
+
+function getImagePathFromClipboardText(text) {
+  const candidates = text
+    .split(/\r?\n/)
+    .map((candidate) => candidate.trim())
+    .filter(Boolean)
+    .map((candidate) => {
+      if (candidate.startsWith('file://')) {
+        try {
+          return decodeURIComponent(new URL(candidate).pathname);
+        } catch {
+          return candidate;
+        }
+      }
+
+      return candidate;
+    });
+
+  return candidates.find((candidate) => {
+    const ext = path.extname(candidate).toLowerCase();
+    return IMAGE_FILE_EXTENSIONS.has(ext) && fs.existsSync(candidate);
+  }) || '';
+}
+
+function readClipboardImageFile() {
+  const fileText = [
+    decodeClipboardBuffer('public.file-url'),
+    decodeClipboardBuffer('NSFilenamesPboardType'),
+    clipboard.readText()
+  ].find(Boolean) || '';
+
+  const imagePath = getImagePathFromClipboardText(fileText);
+
+  if (!imagePath) {
+    return null;
+  }
+
+  const image = nativeImage.createFromPath(imagePath);
+  return image.isEmpty() ? null : image;
 }
 
 function readClipboardText() {
@@ -993,13 +1063,16 @@ function addClipboardImage(image) {
 
 function watchClipboard() {
   clipboardTimer = setInterval(() => {
-    const text = readClipboardText();
-    if (text) {
-      addClipboardText(text);
+    const image = readClipboardImage();
+    if (image && !image.isEmpty()) {
+      addClipboardImage(image);
       return;
     }
 
-    addClipboardImage(readClipboardImage());
+    const text = readClipboardText();
+    if (text) {
+      addClipboardText(text);
+    }
   }, 800);
 }
 

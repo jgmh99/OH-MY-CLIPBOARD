@@ -810,13 +810,9 @@
 
       const typeLabel = document.createElement('p');
       typeLabel.className = 'history-item__type';
-      typeLabel.textContent = historyFeedback?.id === item.id && historyFeedback.type === 'copied'
-        ? messages.copiedFeedback
-        : item.locked
-          ? messages.lockedItem
-          : item.kind === 'image'
-            ? messages.imageItem
-            : messages.textItem;
+      typeLabel.textContent = item.kind === 'image'
+        ? messages.imageItem
+        : messages.textItem;
 
       const copyButton = document.createElement('button');
       copyButton.className = 'history-item__text';
@@ -867,19 +863,17 @@
 
       copyButton.addEventListener('click', async (event) => {
         event.stopPropagation();
-        const updatedHistory = await window.clipboardApp.copyText(item.id);
         setHistoryFeedback(item.id, 'copied');
-        renderHistory(updatedHistory);
+        await window.clipboardApp.copyText(item.id);
         showToast(messages.copiedToast);
       });
 
       lockButton.addEventListener('click', async (event) => {
         event.stopPropagation();
+        const willLock = !item.locked;
+        setHistoryFeedback(item.id, willLock ? 'locked' : 'unlocked');
         const updatedHistory = await window.clipboardApp.toggleLockItem(item.id);
         const updatedItem = updatedHistory.find((historyItem) => historyItem.id === item.id);
-        const feedbackType = updatedItem?.locked ? 'locked' : 'unlocked';
-        setHistoryFeedback(item.id, feedbackType);
-        renderHistory(updatedHistory);
         showToast(updatedItem?.locked ? messages.lockedFeedback : messages.unlockedFeedback);
       });
 
