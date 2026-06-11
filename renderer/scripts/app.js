@@ -17,6 +17,7 @@
   const historySearchInput = document.getElementById('history-search');
   const historySearchClear = document.getElementById('history-search-clear');
   const historySidebarButtons = document.querySelectorAll('.history-sidebar__item');
+  const toast = document.getElementById('toast');
 
   const groupOrder = ['general', 'history', 'behavior'];
   const groupedConfig = groupOrder.map((group) => ({
@@ -35,6 +36,9 @@
   let currentHistory = [];
   let currentHistoryQuery = '';
   let currentHistoryFilter = 'all';
+  let historyFeedback = null;
+  let historyFeedbackTimer = null;
+  let toastTimer = null;
   let currentUpdateState = {
     status: 'idle',
     version: null,
@@ -115,6 +119,30 @@
   function showSettingsView() {
     historyView.classList.add('hidden');
     settingsView.classList.remove('hidden');
+  }
+
+  function showToast(message) {
+    if (!toast) {
+      return;
+    }
+
+    window.clearTimeout(toastTimer);
+    toast.textContent = message;
+    toast.classList.add('show');
+    toastTimer = window.setTimeout(() => {
+      toast.classList.remove('show');
+    }, 1800);
+  }
+
+  function setHistoryFeedback(id, type) {
+    window.clearTimeout(historyFeedbackTimer);
+    historyFeedback = { id, type };
+    historyFeedbackTimer = window.setTimeout(() => {
+      if (historyFeedback?.id === id && historyFeedback?.type === type) {
+        historyFeedback = null;
+        renderHistory(currentHistory);
+      }
+    }, 1200);
   }
 
   function applyAppearance(settings) {
@@ -749,6 +777,9 @@
     visibleHistory.forEach((item) => {
       const row = document.createElement('article');
       row.className = item.locked ? 'history-item history-item--locked' : 'history-item';
+      if (historyFeedback?.id === item.id) {
+        row.classList.add(`history-item--${historyFeedback.type}`);
+      }
 
       const main = document.createElement('div');
       main.className = 'history-item__main';
@@ -765,7 +796,13 @@
 
       const typeLabel = document.createElement('p');
       typeLabel.className = 'history-item__type';
-      typeLabel.textContent = item.kind === 'image' ? messages.imageItem : messages.textItem;
+      typeLabel.textContent = historyFeedback?.id === item.id && historyFeedback.type === 'copied'
+        ? messages.copiedFeedback
+        : item.locked
+          ? messages.lockedItem
+          : item.kind === 'image'
+            ? messages.imageItem
+            : messages.textItem;
 
       const copyButton = document.createElement('button');
       copyButton.className = 'history-item__text';
@@ -818,13 +855,19 @@
       copyButton.addEventListener('click', async (event) => {
         event.stopPropagation();
         const updatedHistory = await window.clipboardApp.copyText(item.id);
+        setHistoryFeedback(item.id, 'copied');
         renderHistory(updatedHistory);
+        showToast(messages.copiedToast);
       });
 
       lockButton.addEventListener('click', async (event) => {
         event.stopPropagation();
         const updatedHistory = await window.clipboardApp.toggleLockItem(item.id);
+        const updatedItem = updatedHistory.find((historyItem) => historyItem.id === item.id);
+        const feedbackType = updatedItem?.locked ? 'locked' : 'unlocked';
+        setHistoryFeedback(item.id, feedbackType);
         renderHistory(updatedHistory);
+        showToast(updatedItem?.locked ? messages.lockedFeedback : messages.unlockedFeedback);
       });
 
       deleteButton.addEventListener('click', async (event) => {
@@ -888,7 +931,7 @@
     }
   });
 
-  openSettingsButton.addEventListener('click', showSettingsView);
+  openSettingsButton?.addEventListener('click', showSettingsView);
   historySidebarButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const filter = button.dataset.historyFilter;

@@ -493,6 +493,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   background: var(--panel);
   box-shadow: none;
   overflow: hidden;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .history-item:first-child {
@@ -500,7 +501,8 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 }
 
 .history-item--locked {
-  color: inherit;
+  border-color: rgba(47, 124, 246, 0.28);
+  background: linear-gradient(180deg, rgba(232, 243, 255, 0.74), #ffffff);
 }
 
 .history-item__main {
@@ -526,6 +528,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   background: var(--accent-soft);
   color: var(--text);
   font-size: var(--font-xl);
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .history-item__preview {
@@ -540,6 +543,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   font-weight: 700;
   letter-spacing: 0;
   text-transform: none;
+  transition: color 180ms ease;
 }
 
 .history-item__text {
@@ -616,12 +620,63 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 }
 
 .history-item--locked .history-item__lock {
-  background: var(--history-lock-soft);
-  color: var(--history-lock);
+  background: #ffffff;
+  color: var(--accent);
+  border: 1px solid rgba(47, 124, 246, 0.22);
 }
 
 .history-item--locked .history-item__main {
-  box-shadow: inset 0 0 0 1px var(--history-lock-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.history-item--locked .history-item__icon {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.history-item--copied {
+  border-color: rgba(47, 124, 246, 0.42);
+  box-shadow: 0 10px 26px rgba(47, 124, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.history-item--copied .history-item__icon {
+  background: var(--accent);
+  color: #ffffff;
+  transform: scale(1.04);
+}
+
+.history-item--copied .history-item__type,
+.history-item--unlocked .history-item__type {
+  color: var(--accent);
+}
+
+.history-item--unlocked {
+  border-color: rgba(47, 124, 246, 0.28);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 200;
+  padding: 11px 16px;
+  border-radius: 999px;
+  background: rgba(25, 31, 40, 0.92);
+  color: #ffffff;
+  font-size: var(--font-md);
+  font-weight: 700;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .settings-group {

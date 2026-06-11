@@ -11,9 +11,6 @@
       <section id="history-view" class="screen screen--overlay-header">
         <header class="screen-header">
           <div class="screen-header__leading">
-            <button id="open-settings" class="icon-button" type="button" aria-label="Open settings">
-              <span>⚙</span>
-            </button>
             <div id="history-header-copy" class="screen-header__copy">
               <p id="history-kicker" class="eyebrow">Clipboard</p>
               <h1 id="history-title" class="screen-title">Oh My Clipboard</h1>
@@ -33,7 +30,7 @@
             </button>
             <button class="history-sidebar__item" type="button" data-history-filter="locked">
               <span class="history-sidebar__icon" aria-hidden="true">🔒</span>
-              <span class="history-sidebar__label">고정됨</span>
+              <span class="history-sidebar__label">잠금</span>
             </button>
             <button class="history-sidebar__item" type="button" data-history-filter="settings">
               <span class="history-sidebar__icon" aria-hidden="true">⚙</span>
@@ -87,6 +84,8 @@
           </button>
         </footer>
       </section>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
 
     <script src="./renderer/scripts/translations.js"></script>

@@ -15,9 +15,14 @@ window.OhMyClipboardTranslations = {
     clearSearch: '검색 지우기',
     nav: {
       all: '최근',
-      locked: '고정됨',
+      locked: '잠금',
       settings: '설정'
     },
+    copiedToast: '복사되었습니다.',
+    copiedFeedback: '복사됨',
+    lockedFeedback: '잠금 처리됨',
+    unlockedFeedback: '잠금 해제됨',
+    lockedItem: '잠금',
     imageItem: '이미지',
     textItem: '텍스트',
     imageAlt: '클립보드 이미지 항목',
@@ -118,9 +123,14 @@ window.OhMyClipboardTranslations = {
     clearSearch: 'Clear search',
     nav: {
       all: 'Recent',
-      locked: 'Locked',
+      locked: 'Lock',
       settings: 'Settings'
     },
+    copiedToast: 'Copied.',
+    copiedFeedback: 'Copied',
+    lockedFeedback: 'Locked',
+    unlockedFeedback: 'Unlocked',
+    lockedItem: 'Lock',
     imageItem: 'Image',
     textItem: 'Text',
     imageAlt: 'Clipboard image item',
@@ -221,9 +231,14 @@ window.OhMyClipboardTranslations = {
     clearSearch: '検索をクリア',
     nav: {
       all: '最近',
-      locked: '固定済み',
+      locked: 'ロック',
       settings: '設定'
     },
+    copiedToast: 'コピーしました。',
+    copiedFeedback: 'コピー済み',
+    lockedFeedback: 'ロックしました',
+    unlockedFeedback: 'ロック解除しました',
+    lockedItem: 'ロック',
     imageItem: '画像',
     textItem: 'テキスト',
     imageAlt: 'クリップボード画像項目',
@@ -324,9 +339,14 @@ window.OhMyClipboardTranslations = {
     clearSearch: '清除搜索',
     nav: {
       all: '最近',
-      locked: '已固定',
+      locked: '锁定',
       settings: '设置'
     },
+    copiedToast: '已复制。',
+    copiedFeedback: '已复制',
+    lockedFeedback: '已锁定',
+    unlockedFeedback: '已解锁',
+    lockedItem: '锁定',
     imageItem: '图片',
     textItem: '文本',
     imageAlt: '剪贴板图片项目',
