@@ -622,43 +622,6 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   border: 1px solid rgba(47, 124, 246, 0.22);
 }
 
-.history-item--feedback-copied,
-.history-item--feedback-locked,
-.history-item--feedback-unlocked {
-  border-color: rgba(47, 124, 246, 0.42);
-  animation: history-feedback-pulse 980ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.history-item--feedback-copied .history-item__type,
-.history-item--feedback-locked .history-item__type,
-.history-item--feedback-unlocked .history-item__type {
-  color: var(--accent);
-}
-
-.history-item--feedback-copied .history-item__text,
-.history-item--feedback-locked .history-item__text,
-.history-item--feedback-unlocked .history-item__text {
-  transform: translateX(2px);
-}
-
-@keyframes history-feedback-pulse {
-  0% {
-    background: var(--panel);
-    box-shadow: none;
-    transform: translateY(0);
-  }
-  34% {
-    background: rgba(232, 243, 255, 0.72);
-    box-shadow: 0 12px 28px rgba(47, 124, 246, 0.1);
-    transform: translateY(-1px);
-  }
-  100% {
-    background: var(--panel);
-    box-shadow: none;
-    transform: translateY(0);
-  }
-}
-
 .toast {
   position: fixed;
   left: 50%;

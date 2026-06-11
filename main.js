@@ -244,13 +244,27 @@ function syncClipboardBaseline() {
 }
 
 function readClipboardImage() {
+  const fileImage = readClipboardImageFile();
+
+  if (fileImage && !fileImage.isEmpty()) {
+    return fileImage;
+  }
+
   const image = clipboard.readImage();
 
   if (image.isEmpty()) {
-    return readClipboardImageFile();
+    return null;
   }
 
   return image;
+}
+
+function readClipboardTextFormat(format) {
+  try {
+    return clipboard.read(format).trim();
+  } catch {
+    return '';
+  }
 }
 
 function decodeClipboardBuffer(format) {
@@ -271,8 +285,17 @@ function decodeClipboardBuffer(format) {
 }
 
 function getImagePathFromClipboardText(text) {
-  const candidates = text
-    .split(/\r?\n/)
+  const normalizedText = text.replace(/\0/g, '\n');
+  const fileUrls = normalizedText.match(/file:\/\/[^\s<>"']+/g) || [];
+  const absolutePaths = normalizedText.match(/\/[^\n\r<>"']+?\.(?:png|jpe?g|gif|webp|bmp|tiff?|heic|heif|ico)/gi) || [];
+
+  const candidates = [
+    ...fileUrls,
+    ...absolutePaths,
+    ...normalizedText
+      .replace(/<[^>]+>/g, '\n')
+      .split(/\r?\n/)
+  ]
     .map((candidate) => candidate.trim())
     .filter(Boolean)
     .map((candidate) => {
@@ -295,7 +318,10 @@ function getImagePathFromClipboardText(text) {
 
 function readClipboardImageFile() {
   const fileText = [
+    readClipboardTextFormat('public.file-url'),
+    readClipboardTextFormat('public.url'),
     decodeClipboardBuffer('public.file-url'),
+    decodeClipboardBuffer('public.url'),
     decodeClipboardBuffer('NSFilenamesPboardType'),
     clipboard.readText()
   ].find(Boolean) || '';

@@ -37,8 +37,6 @@
   let currentHistory = [];
   let currentHistoryQuery = '';
   let currentHistoryFilter = 'all';
-  let historyFeedback = null;
-  let historyFeedbackTimer = null;
   let toastTimer = null;
   let currentUpdateState = {
     status: 'idle',
@@ -148,17 +146,6 @@
     toastTimer = window.setTimeout(() => {
       toast.classList.remove('show');
     }, 2200);
-  }
-
-  function setHistoryFeedback(id, type) {
-    window.clearTimeout(historyFeedbackTimer);
-    historyFeedback = { id, type };
-    historyFeedbackTimer = window.setTimeout(() => {
-      if (historyFeedback?.id === id && historyFeedback?.type === type) {
-        historyFeedback = null;
-        renderHistory(currentHistory);
-      }
-    }, 1200);
   }
 
   function applyAppearance(settings) {
@@ -795,9 +782,6 @@
     visibleHistory.forEach((item) => {
       const row = document.createElement('article');
       row.className = item.locked ? 'history-item history-item--locked' : 'history-item';
-      if (historyFeedback?.id === item.id) {
-        row.classList.add(`history-item--feedback-${historyFeedback.type}`);
-      }
 
       const main = document.createElement('div');
       main.className = 'history-item__main';
@@ -863,15 +847,12 @@
 
       copyButton.addEventListener('click', async (event) => {
         event.stopPropagation();
-        setHistoryFeedback(item.id, 'copied');
         await window.clipboardApp.copyText(item.id);
         showToast(messages.copiedToast);
       });
 
       lockButton.addEventListener('click', async (event) => {
         event.stopPropagation();
-        const willLock = !item.locked;
-        setHistoryFeedback(item.id, willLock ? 'locked' : 'unlocked');
         const updatedHistory = await window.clipboardApp.toggleLockItem(item.id);
         const updatedItem = updatedHistory.find((historyItem) => historyItem.id === item.id);
         showToast(updatedItem?.locked ? messages.lockedFeedback : messages.unlockedFeedback);
