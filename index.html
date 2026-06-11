@@ -10,11 +10,6 @@
     <div class="app-shell">
       <section id="history-view" class="screen screen--overlay-header">
         <header class="screen-header">
-          <div class="window-dots" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
           <div class="screen-header__leading">
             <button id="open-settings" class="icon-button" type="button" aria-label="Open settings">
               <span>⚙</span>
@@ -32,48 +27,47 @@
 
         <div class="history-layout screen-body">
           <nav class="history-sidebar" aria-label="History sections">
-            <button class="history-sidebar__item active" type="button">최근</button>
-            <button class="history-sidebar__item" type="button">고정됨</button>
-            <button class="history-sidebar__item" type="button">설정</button>
+            <button class="history-sidebar__item active" type="button" data-history-filter="all">
+              <span class="history-sidebar__icon" aria-hidden="true">⌘</span>
+              <span class="history-sidebar__label">최근</span>
+            </button>
+            <button class="history-sidebar__item" type="button" data-history-filter="locked">
+              <span class="history-sidebar__icon" aria-hidden="true">🔒</span>
+              <span class="history-sidebar__label">고정됨</span>
+            </button>
+            <button class="history-sidebar__item" type="button" data-history-filter="settings">
+              <span class="history-sidebar__icon" aria-hidden="true">⚙</span>
+              <span class="history-sidebar__label">설정</span>
+            </button>
           </nav>
 
           <div class="settings-groups history-groups">
-          <section class="settings-group panel history-group">
-            <div id="history-panel-header" class="panel__header">
-              <div>
-                <p id="history-panel-kicker" class="panel__kicker">Recent items</p>
-                <h2 id="history-panel-title" class="panel__title">Clipboard History</h2>
+            <section class="settings-group panel history-group">
+              <div id="history-panel-header" class="panel__header">
+                <div>
+                  <p id="history-panel-kicker" class="panel__kicker">Recent items</p>
+                  <h2 id="history-panel-title" class="panel__title">Clipboard History</h2>
+                </div>
               </div>
-            </div>
 
-            <div class="history-toolbar">
-              <label class="search-field" for="history-search">
-                <span class="search-field__icon" aria-hidden="true">⌕</span>
-                <input id="history-search" type="search" autocomplete="off" spellcheck="false" />
-              </label>
-              <button id="history-search-clear" class="icon-button history-search-clear" type="button" aria-label="Clear search">
-                <span>×</span>
-              </button>
-            </div>
+              <div class="history-toolbar">
+                <label class="search-field" for="history-search">
+                  <span class="search-field__icon" aria-hidden="true">⌕</span>
+                  <input id="history-search" type="search" autocomplete="off" spellcheck="false" />
+                </label>
+                <button id="history-search-clear" class="icon-button history-search-clear" type="button" aria-label="Clear search">
+                  <span>×</span>
+                </button>
+              </div>
 
-            <div id="list" class="history-list"></div>
-          </section>
+              <div id="list" class="history-list"></div>
+            </section>
           </div>
-
-          <aside class="history-callout" aria-label="Quick copy tip">
-            <strong>작게 열고 빠르게 복사</strong>
-            <p>창을 크게 띄우지 않아도, 방금 지나간 텍스트를 다시 붙잡을 수 있습니다.</p>
-          </aside>
         </div>
       </section>
 
       <section id="settings-view" class="screen screen--overlay-header hidden">
         <header class="screen-header">
-          <div class="window-dots" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
           <div class="screen-header__leading">
             <button id="back" class="icon-button" type="button" aria-label="Go back">
               <span>←</span>

@@ -13,6 +13,11 @@ window.OhMyClipboardTranslations = {
     noSearchResults: '검색 결과가 없습니다.',
     searchPlaceholder: '히스토리 검색',
     clearSearch: '검색 지우기',
+    nav: {
+      all: '최근',
+      locked: '고정됨',
+      settings: '설정'
+    },
     imageItem: '이미지',
     textItem: '텍스트',
     imageAlt: '클립보드 이미지 항목',
@@ -111,6 +116,11 @@ window.OhMyClipboardTranslations = {
     noSearchResults: 'No matching items.',
     searchPlaceholder: 'Search history',
     clearSearch: 'Clear search',
+    nav: {
+      all: 'Recent',
+      locked: 'Locked',
+      settings: 'Settings'
+    },
     imageItem: 'Image',
     textItem: 'Text',
     imageAlt: 'Clipboard image item',
@@ -209,6 +219,11 @@ window.OhMyClipboardTranslations = {
     noSearchResults: '一致する項目がありません。',
     searchPlaceholder: '履歴を検索',
     clearSearch: '検索をクリア',
+    nav: {
+      all: '最近',
+      locked: '固定済み',
+      settings: '設定'
+    },
     imageItem: '画像',
     textItem: 'テキスト',
     imageAlt: 'クリップボード画像項目',
@@ -307,6 +322,11 @@ window.OhMyClipboardTranslations = {
     noSearchResults: '没有匹配的项目。',
     searchPlaceholder: '搜索历史',
     clearSearch: '清除搜索',
+    nav: {
+      all: '最近',
+      locked: '已固定',
+      settings: '设置'
+    },
     imageItem: '图片',
     textItem: '文本',
     imageAlt: '剪贴板图片项目',

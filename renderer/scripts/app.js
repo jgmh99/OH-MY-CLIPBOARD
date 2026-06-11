@@ -34,6 +34,7 @@
   };
   let currentHistory = [];
   let currentHistoryQuery = '';
+  let currentHistoryFilter = 'all';
   let currentUpdateState = {
     status: 'idle',
     version: null,
@@ -90,14 +91,17 @@
     return [item.text || '', item.note || ''].join(' ').trim();
   }
 
-  function filterHistory(history, query, messages) {
+  function filterHistory(history, query, messages, filter = currentHistoryFilter) {
     const normalizedQuery = query.trim().toLowerCase();
+    const filteredByType = filter === 'locked'
+      ? history.filter((item) => item.locked)
+      : history;
 
     if (!normalizedQuery) {
-      return history;
+      return filteredByType;
     }
 
-    return history.filter((item) => {
+    return filteredByType.filter((item) => {
       const searchable = getHistorySearchableText(item, messages).toLowerCase();
       return searchable.includes(normalizedQuery);
     });
@@ -696,6 +700,14 @@
     document.getElementById('history-panel-title').textContent = messages.historyPanelTitle;
     historySearchInput.placeholder = messages.searchPlaceholder;
     historySearchClear.setAttribute('aria-label', messages.clearSearch);
+    historySidebarButtons.forEach((button) => {
+      const filter = button.dataset.historyFilter;
+      const label = button.querySelector('.history-sidebar__label');
+
+      if (label && filter && messages.nav[filter]) {
+        label.textContent = messages.nav[filter];
+      }
+    });
 
     document.getElementById('settings-kicker').textContent = '';
     document.getElementById('settings-title').textContent = messages.settingsTitle;
@@ -879,13 +891,17 @@
   openSettingsButton.addEventListener('click', showSettingsView);
   historySidebarButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      if (button.textContent.trim() === '설정') {
+      const filter = button.dataset.historyFilter;
+
+      if (filter === 'settings') {
         showSettingsView();
         return;
       }
 
+      currentHistoryFilter = filter || 'all';
       historySidebarButtons.forEach((item) => item.classList.remove('active'));
       button.classList.add('active');
+      renderHistory(currentHistory);
     });
   });
   backButton.addEventListener('click', showHistoryView);
