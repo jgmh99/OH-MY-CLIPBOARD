@@ -8,6 +8,7 @@
   const clearButton = document.getElementById('clear');
   const openSettingsButton = document.getElementById('open-settings');
   const backButton = document.getElementById('back');
+  const historyGroups = document.getElementById('history-groups');
   const settingsGroups = document.getElementById('settings-groups');
   const openLoginSettings = document.getElementById('open-login-settings');
   const settingsFooter = document.querySelector('.settings-footer');
@@ -113,12 +114,25 @@
 
   function showHistoryView() {
     historyView.classList.remove('hidden');
-    settingsView.classList.add('hidden');
+    settingsView?.classList.add('hidden');
+    historyGroups.classList.remove('hidden');
+    settingsGroups.classList.add('hidden');
+    clearButton.classList.remove('hidden');
   }
 
   function showSettingsView() {
-    historyView.classList.add('hidden');
-    settingsView.classList.remove('hidden');
+    historyView.classList.remove('hidden');
+    settingsView?.classList.add('hidden');
+    historyGroups.classList.add('hidden');
+    settingsGroups.classList.remove('hidden');
+    clearButton.classList.add('hidden');
+    setActiveSidebar('settings');
+  }
+
+  function setActiveSidebar(filter) {
+    historySidebarButtons.forEach((button) => {
+      button.classList.toggle('active', button.dataset.historyFilter === filter);
+    });
   }
 
   function showToast(message) {
@@ -737,9 +751,11 @@
       }
     });
 
-    document.getElementById('settings-kicker').textContent = '';
-    document.getElementById('settings-title').textContent = messages.settingsTitle;
-    settingsHeaderCopy.classList.remove('hidden');
+    const settingsKicker = document.getElementById('settings-kicker');
+    const settingsTitle = document.getElementById('settings-title');
+    if (settingsKicker) settingsKicker.textContent = '';
+    if (settingsTitle) settingsTitle.textContent = messages.settingsTitle;
+    settingsHeaderCopy?.classList.remove('hidden');
     openLoginSettings.textContent = messages.openLoginSettings;
 
     groupedConfig.forEach(({ group }) => {
@@ -942,12 +958,14 @@
       }
 
       currentHistoryFilter = filter || 'all';
-      historySidebarButtons.forEach((item) => item.classList.remove('active'));
-      button.classList.add('active');
+      historyGroups.classList.remove('hidden');
+      settingsGroups.classList.add('hidden');
+      clearButton.classList.remove('hidden');
+      setActiveSidebar(currentHistoryFilter);
       renderHistory(currentHistory);
     });
   });
-  backButton.addEventListener('click', showHistoryView);
+  backButton?.addEventListener('click', showHistoryView);
   openLoginSettings.addEventListener('click', () => {
     window.clipboardApp.openLoginItemsSettings();
   });

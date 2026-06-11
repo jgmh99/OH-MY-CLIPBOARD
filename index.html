@@ -38,7 +38,7 @@
             </button>
           </nav>
 
-          <div class="settings-groups history-groups">
+          <div id="history-groups" class="settings-groups history-groups">
             <section class="settings-group panel history-group">
               <div id="history-panel-header" class="panel__header">
                 <div>
@@ -60,29 +60,15 @@
               <div id="list" class="history-list"></div>
             </section>
           </div>
-        </div>
-      </section>
 
-      <section id="settings-view" class="screen screen--overlay-header hidden">
-        <header class="screen-header">
-          <div class="screen-header__leading">
-            <button id="back" class="icon-button" type="button" aria-label="Go back">
-              <span>←</span>
-            </button>
-            <div id="settings-header-copy" class="screen-header__copy">
-              <p id="settings-kicker" class="eyebrow">Preferences</p>
-              <h1 id="settings-title" class="screen-title">Settings</h1>
-            </div>
+          <div id="settings-groups" class="settings-groups settings-tab-panel hidden">
+            <footer class="settings-footer">
+              <button id="open-login-settings" class="action-button action-button--secondary action-button--full" type="button">
+                Open macOS Login Items Settings
+              </button>
+            </footer>
           </div>
-        </header>
-
-        <div id="settings-groups" class="settings-groups screen-body"></div>
-
-        <footer class="settings-footer">
-          <button id="open-login-settings" class="action-button action-button--secondary action-button--full" type="button">
-            Open macOS Login Items Settings
-          </button>
-        </footer>
+        </div>
       </section>
 
       <div id="toast" class="toast" role="status" aria-live="polite"></div>
