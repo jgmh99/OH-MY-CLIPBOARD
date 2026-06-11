@@ -503,7 +503,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   background: var(--panel);
   box-shadow: none;
   overflow: hidden;
-  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  transition: background 260ms ease, border-color 260ms ease, box-shadow 260ms ease, transform 260ms ease;
 }
 
 .history-item:first-child {
@@ -511,8 +511,8 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 }
 
 .history-item--locked {
-  border-color: rgba(47, 124, 246, 0.28);
-  background: linear-gradient(180deg, rgba(232, 243, 255, 0.74), #ffffff);
+  border-color: var(--panel-border);
+  background: var(--panel);
 }
 
 .history-item__main {
@@ -524,21 +524,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 
 .history-item__content {
   display: flex;
-  gap: 14px;
   align-items: center;
-}
-
-.history-item__icon {
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 13px;
-  background: var(--accent-soft);
-  color: var(--text);
-  font-size: var(--font-xl);
-  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
 }
 
 .history-item__preview {
@@ -547,7 +533,7 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
 }
 
 .history-item__type {
-  margin: 4px 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: var(--font-sm);
   font-weight: 700;
@@ -571,10 +557,11 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   line-height: 1.45;
   word-break: break-word;
   white-space: pre-wrap;
+  transition: color 220ms ease, transform 220ms ease;
 }
 
 .history-item__text .history-item__type {
-  margin-bottom: 0;
+  margin-bottom: 1px;
 }
 
 .history-item__value {
@@ -635,35 +622,41 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   border: 1px solid rgba(47, 124, 246, 0.22);
 }
 
-.history-item--locked .history-item__main {
-  box-shadow: inset 3px 0 0 var(--accent);
-}
-
-.history-item--locked .history-item__icon {
-  background: var(--accent);
-  color: #ffffff;
-}
-
-.history-item--copied {
+.history-item--feedback-copied,
+.history-item--feedback-locked,
+.history-item--feedback-unlocked {
   border-color: rgba(47, 124, 246, 0.42);
-  box-shadow: 0 10px 26px rgba(47, 124, 246, 0.12);
-  transform: translateY(-1px);
+  animation: history-feedback-pulse 980ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.history-item--copied .history-item__icon {
-  background: var(--accent);
-  color: #ffffff;
-  transform: scale(1.04);
-}
-
-.history-item--copied .history-item__type,
-.history-item--unlocked .history-item__type {
+.history-item--feedback-copied .history-item__type,
+.history-item--feedback-locked .history-item__type,
+.history-item--feedback-unlocked .history-item__type {
   color: var(--accent);
 }
 
-.history-item--unlocked {
-  border-color: rgba(47, 124, 246, 0.28);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+.history-item--feedback-copied .history-item__text,
+.history-item--feedback-locked .history-item__text,
+.history-item--feedback-unlocked .history-item__text {
+  transform: translateX(2px);
+}
+
+@keyframes history-feedback-pulse {
+  0% {
+    background: var(--panel);
+    box-shadow: none;
+    transform: translateY(0);
+  }
+  34% {
+    background: rgba(232, 243, 255, 0.72);
+    box-shadow: 0 12px 28px rgba(47, 124, 246, 0.1);
+    transform: translateY(-1px);
+  }
+  100% {
+    background: var(--panel);
+    box-shadow: none;
+    transform: translateY(0);
+  }
 }
 
 .toast {
@@ -671,22 +664,25 @@ body[data-theme="dark"] .screen--overlay-header .screen-header {
   left: 50%;
   bottom: 28px;
   z-index: 200;
-  padding: 11px 16px;
-  border-radius: 999px;
-  background: rgba(25, 31, 40, 0.92);
+  padding: 12px 18px;
+  border-radius: 18px;
+  background: rgba(20, 26, 36, 0.9);
   color: #ffffff;
   font-size: var(--font-md);
   font-weight: 700;
   opacity: 0;
   pointer-events: none;
-  transform: translate(-50%, 12px);
-  transition: opacity 180ms ease, transform 180ms ease;
-  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.18);
+  transform: translate(-50%, 18px) scale(0.96);
+  transition: opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .toast.show {
   opacity: 1;
-  transform: translate(-50%, 0);
+  transform: translate(-50%, 0) scale(1);
 }
 
 .settings-group {

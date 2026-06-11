@@ -142,10 +142,12 @@
 
     window.clearTimeout(toastTimer);
     toast.textContent = message;
+    toast.classList.remove('show');
+    void toast.offsetWidth;
     toast.classList.add('show');
     toastTimer = window.setTimeout(() => {
       toast.classList.remove('show');
-    }, 1800);
+    }, 2200);
   }
 
   function setHistoryFeedback(id, type) {
@@ -794,7 +796,7 @@
       const row = document.createElement('article');
       row.className = item.locked ? 'history-item history-item--locked' : 'history-item';
       if (historyFeedback?.id === item.id) {
-        row.classList.add(`history-item--${historyFeedback.type}`);
+        row.classList.add(`history-item--feedback-${historyFeedback.type}`);
       }
 
       const main = document.createElement('div');
@@ -802,10 +804,6 @@
 
       const content = document.createElement('div');
       content.className = 'history-item__content';
-
-      const icon = document.createElement('div');
-      icon.className = 'history-item__icon';
-      icon.textContent = item.locked ? '🔒' : '⌘';
 
       const preview = document.createElement('div');
       preview.className = 'history-item__preview';
@@ -838,11 +836,10 @@
         const value = document.createElement('span');
         value.className = 'history-item__value';
         value.textContent = previewText;
-        copyButton.appendChild(value);
         copyButton.appendChild(typeLabel);
+        copyButton.appendChild(value);
       }
 
-      content.appendChild(icon);
       preview.appendChild(copyButton);
       content.appendChild(preview);
       main.appendChild(content);
