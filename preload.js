@@ -15,20 +15,29 @@ contextBridge.exposeInMainWorld('clipboardApp', {
   openBugReport: () => ipcRenderer.invoke('open-bug-report'),
 
   onHistoryUpdated: (callback) => {
-    ipcRenderer.on('clipboard-history-updated', (_event, history) => {
+    const listener = (_event, history) => {
       callback(history);
-    });
+    };
+
+    ipcRenderer.on('clipboard-history-updated', listener);
+    return () => ipcRenderer.removeListener('clipboard-history-updated', listener);
   },
 
   onSettingsUpdated: (callback) => {
-    ipcRenderer.on('settings-updated', (_event, settings) => {
+    const listener = (_event, settings) => {
       callback(settings);
-    });
+    };
+
+    ipcRenderer.on('settings-updated', listener);
+    return () => ipcRenderer.removeListener('settings-updated', listener);
   },
 
   onOpenSettingsView: (callback) => {
-    ipcRenderer.on('open-settings-view', () => {
+    const listener = () => {
       callback();
-    });
+    };
+
+    ipcRenderer.on('open-settings-view', listener);
+    return () => ipcRenderer.removeListener('open-settings-view', listener);
   }
 });

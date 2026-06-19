@@ -8,14 +8,16 @@
   },
   "main": "main.js",
   "scripts": {
-    "dev": "electron .",
+    "dev": "node scripts/dev.js",
     "start": "electron .",
+    "build": "vite build",
     "dist": "electron-builder --mac --publish never",
     "release": "semantic-release",
     "release:dry-run": "semantic-release --dry-run",
     "lint:commits": "commitlint --from origin/main --to HEAD"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
     "@commitlint/cli": "^19.8.1",
     "@commitlint/config-conventional": "^19.8.1",
     "@semantic-release/commit-analyzer": "^13.0.1",
@@ -24,7 +26,8 @@
     "@semantic-release/release-notes-generator": "^14.1.1",
     "electron": "latest",
     "electron-builder": "latest",
-    "semantic-release": "^24.2.9"
+    "semantic-release": "^24.2.9",
+    "vite": "^7.0.0"
   },
   "build": {
     "appId": "com.ohmyclipboard.app",
@@ -49,6 +52,8 @@
     }
   },
   "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "semver": "^7.8.1"
   }
 }

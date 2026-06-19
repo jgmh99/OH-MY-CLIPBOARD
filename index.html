@@ -4,78 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Oh My Clipboard</title>
-    <link rel="stylesheet" href="./renderer/styles/app.css" />
   </head>
   <body data-theme="system">
-    <div class="app-shell">
-      <section id="history-view" class="screen screen--overlay-header">
-        <header class="screen-header">
-          <div class="screen-header__leading">
-            <div id="history-header-copy" class="screen-header__copy">
-              <p id="history-kicker" class="eyebrow">Clipboard</p>
-              <h1 id="history-title" class="screen-title">Oh My Clipboard</h1>
-            </div>
-          </div>
-
-          <button id="clear" class="action-button action-button--secondary" type="button">
-            Clear
-          </button>
-        </header>
-
-        <div class="history-layout screen-body">
-          <nav class="history-sidebar" aria-label="History sections">
-            <button class="history-sidebar__item active" type="button" data-history-filter="all">
-              <span class="history-sidebar__icon" aria-hidden="true">⌘</span>
-              <span class="history-sidebar__label">최근</span>
-            </button>
-            <button class="history-sidebar__item" type="button" data-history-filter="locked">
-              <span class="history-sidebar__icon" aria-hidden="true">🔒</span>
-              <span class="history-sidebar__label">잠금</span>
-            </button>
-            <button class="history-sidebar__item" type="button" data-history-filter="settings">
-              <span class="history-sidebar__icon" aria-hidden="true">⚙</span>
-              <span class="history-sidebar__label">설정</span>
-            </button>
-          </nav>
-
-          <div id="history-groups" class="settings-groups history-groups">
-            <section class="settings-group panel history-group">
-              <div id="history-panel-header" class="panel__header">
-                <div>
-                  <p id="history-panel-kicker" class="panel__kicker">Recent items</p>
-                  <h2 id="history-panel-title" class="panel__title">Clipboard History</h2>
-                </div>
-              </div>
-
-              <div class="history-toolbar">
-                <label class="search-field" for="history-search">
-                  <span class="search-field__icon" aria-hidden="true">⌕</span>
-                  <input id="history-search" type="search" autocomplete="off" spellcheck="false" />
-                </label>
-                <button id="history-search-clear" class="icon-button history-search-clear" type="button" aria-label="Clear search">
-                  <span>×</span>
-                </button>
-              </div>
-
-              <div id="list" class="history-list"></div>
-            </section>
-          </div>
-
-          <div id="settings-groups" class="settings-groups settings-tab-panel hidden">
-            <footer class="settings-footer">
-              <button id="open-login-settings" class="action-button action-button--secondary action-button--full" type="button">
-                Open macOS Login Items Settings
-              </button>
-            </footer>
-          </div>
-        </div>
-      </section>
-
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    </div>
-
-    <script src="./renderer/scripts/translations.js"></script>
-    <script src="./renderer/scripts/settings-config.js"></script>
-    <script src="./renderer/scripts/app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

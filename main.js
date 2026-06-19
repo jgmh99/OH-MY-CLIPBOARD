@@ -2,1252 +2,141 @@ const {
   app,
   BrowserWindow,
   Tray,
-  nativeImage,
   clipboard,
-  ipcMain,
-  Menu,
   globalShortcut,
+  ipcMain,
+  nativeImage,
   screen,
   shell
 } = require('electron');
 
-const path = require('path');
-const fs = require('fs');
-const semver = require('semver');
-
-let tray = null;
-let trayMenu = null;
-let win = null;
-let clipboardHistory = [];
-let lastText = '';
-let lastClipboardSignature = '';
-let clipboardTimer = null;
-let updateState = null;
-let isProgrammaticWindowMove = false;
-
-const TRAY_ICON_PATH = path.join(__dirname, 'icons', 'icon.png');
-const APP_ICON_PATH = path.join(__dirname, 'icons', 'oh-my-clipboard.icns');
-const RELEASES_API_URL = 'https://api.github.com/repos/jgmh99/OH-MY-CLIPBOARD/releases/latest';
-
-const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'zh'];
-const IMAGE_FILE_EXTENSIONS = new Set([
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.webp',
-  '.bmp',
-  '.tif',
-  '.tiff',
-  '.heic',
-  '.heif',
-  '.ico'
-]);
-const SETTINGS_OPTIONS = {
-  launchAtLogin: [true, false],
-  maxHistoryItems: [10, 20, 50, 100],
-  ignoreDuplicates: [true, false],
-  minTextLength: [1, 2, 5, 10, 20, 50],
-  maxTextLength: [200, 500, 1000, 3000, 5000, 10000],
-  pauseTracking: [true, false],
-  autoHideOnBlur: [true, false],
-  theme: ['system', 'dark', 'light'],
-  textSize: [12, 13, 15, 17],
-  language: SUPPORTED_LANGUAGES
-};
-
-const translations = {
-  ko: {
-    appTitle: 'Oh My Clipboard',
-    openHistory: '클립보드 기록 열기',
-    settings: '설정',
-    launchAtLogin: '로그인 시 실행',
-    pauseTracking: '클립보드 추적 일시정지',
-    resumeTracking: '클립보드 추적 다시 시작',
-    quit: 'Oh My Clipboard 종료'
-  },
-  en: {
-    appTitle: 'Oh My Clipboard',
-    openHistory: 'Open Clipboard History',
-    settings: 'Settings',
-    launchAtLogin: 'Launch at Login',
-    pauseTracking: 'Pause Clipboard Tracking',
-    resumeTracking: 'Resume Clipboard Tracking',
-    quit: 'Quit Oh My Clipboard'
-  },
-  ja: {
-    appTitle: 'Oh My Clipboard',
-    openHistory: 'クリップボード履歴を開く',
-    settings: '設定',
-    launchAtLogin: 'ログイン時に起動',
-    pauseTracking: 'クリップボード追跡を一時停止',
-    resumeTracking: 'クリップボード追跡を再開',
-    quit: 'Oh My Clipboard を終了'
-  },
-  zh: {
-    appTitle: 'Oh My Clipboard',
-    openHistory: '打开剪贴板历史',
-    settings: '设置',
-    launchAtLogin: '登录时启动',
-    pauseTracking: '暂停剪贴板监听',
-    resumeTracking: '恢复剪贴板监听',
-    quit: '退出 Oh My Clipboard'
-  }
-};
-
-function createTrayIcon() {
-  const icon = nativeImage.createFromPath(TRAY_ICON_PATH);
-
-  if (icon.isEmpty()) {
-    return nativeImage.createFromDataURL(
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg=='
-    );
-  }
-
-  const resized = icon.resize({
-    width: 16,
-    height: 16
-  });
-
-  resized.setTemplateImage(true);
-  return resized;
-}
-
-const defaultSettings = {
-  launchAtLogin: false,
-  maxHistoryItems: 20,
-  shortcut: 'Command+Shift+V',
-  ignoreDuplicates: true,
-  minTextLength: 1,
-  maxTextLength: 5000,
-  windowX: null,
-  windowY: null,
-  pauseTracking: false,
-  autoHideOnBlur: true,
-  theme: 'system',
-  textSize: 13,
-  language: 'ko'
-};
-
-let settings = { ...defaultSettings };
-
-function getSettingsPath() {
-  return path.join(app.getPath('userData'), 'settings.json');
-}
-
-function loadSettings() {
-  const settingsPath = getSettingsPath();
-
-  if (!fs.existsSync(settingsPath)) {
-    settings = { ...defaultSettings };
-    saveSettings();
-    return;
-  }
-
-  try {
-    const raw = fs.readFileSync(settingsPath, 'utf-8');
-    const parsed = JSON.parse(raw);
-
-    settings = {
-      ...defaultSettings,
-      ...parsed
-    };
-
-    settings = sanitizeSettings(settings);
-
-  } catch {
-    settings = { ...defaultSettings };
-    saveSettings();
-  }
-}
-
-function saveSettings() {
-  fs.writeFileSync(
-    getSettingsPath(),
-    JSON.stringify(settings, null, 2),
-    'utf-8'
-  );
-}
-
-function createHistoryItem(text) {
-  return {
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    kind: 'text',
-    text,
-    imageDataUrl: '',
-    locked: false,
-    createdAt: Date.now()
-  };
-}
-
-function createImageHistoryItem(imageDataUrl) {
-  return {
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    kind: 'image',
-    text: '',
-    imageDataUrl,
-    locked: false,
-    createdAt: Date.now()
-  };
-}
-
-function normalizeHistoryItem(item) {
-  if (typeof item === 'string') {
-    return createHistoryItem(item);
-  }
-
-  return {
-    id: item.id || `${Date.now()}-${Math.random().toString(16).slice(2)}`,
-    kind: item.kind === 'image' ? 'image' : 'text',
-    text: item.text || '',
-    imageDataUrl: item.imageDataUrl || '',
-    locked: Boolean(item.locked),
-    createdAt: item.createdAt || Date.now()
-  };
-}
-
-function getHistoryTexts() {
-  return clipboardHistory.map((item) => item.text || item.imageDataUrl || '');
-}
-
-function getClipboardSignature(item) {
-  if (!item) {
-    return '';
-  }
-
-  if (item.kind === 'image') {
-    return `image:${item.imageDataUrl || ''}`;
-  }
-
-  return `text:${item.text || ''}`;
-}
-
-function syncClipboardBaseline() {
-  const image = readClipboardImage();
-
-  if (image && !image.isEmpty()) {
-    lastText = '';
-    lastClipboardSignature = `image:${image.toDataURL()}`;
-    return;
-  }
-
-  const text = readClipboardText();
-
-  if (text) {
-    lastText = text;
-    lastClipboardSignature = `text:${text}`;
-    return;
-  }
-
-  lastText = '';
-  lastClipboardSignature = '';
-}
-
-function readClipboardImage() {
-  const fileImage = readClipboardImageFile();
-
-  if (fileImage && !fileImage.isEmpty()) {
-    return fileImage;
-  }
-
-  const image = clipboard.readImage();
-
-  if (image.isEmpty()) {
-    return null;
-  }
-
-  return image;
-}
-
-function readClipboardTextFormat(format) {
-  try {
-    return clipboard.read(format).trim();
-  } catch {
-    return '';
-  }
-}
-
-function decodeClipboardBuffer(format) {
-  try {
-    const buffer = clipboard.readBuffer(format);
-
-    if (!buffer || !buffer.length) {
-      return '';
-    }
-
-    return buffer
-      .toString('utf8')
-      .replace(/\0/g, '\n')
-      .trim();
-  } catch {
-    return '';
-  }
-}
-
-function getImagePathFromClipboardText(text) {
-  const normalizedText = text.replace(/\0/g, '\n');
-  const fileUrls = normalizedText.match(/file:\/\/[^\s<>"']+/g) || [];
-  const absolutePaths = normalizedText.match(/\/[^\n\r<>"']+?\.(?:png|jpe?g|gif|webp|bmp|tiff?|heic|heif|ico)/gi) || [];
-
-  const candidates = [
-    ...fileUrls,
-    ...absolutePaths,
-    ...normalizedText
-      .replace(/<[^>]+>/g, '\n')
-      .split(/\r?\n/)
-  ]
-    .map((candidate) => candidate.trim())
-    .filter(Boolean)
-    .map((candidate) => {
-      if (candidate.startsWith('file://')) {
-        try {
-          return decodeURIComponent(new URL(candidate).pathname);
-        } catch {
-          return candidate;
-        }
-      }
-
-      return candidate;
-    });
-
-  return candidates.find((candidate) => {
-    const ext = path.extname(candidate).toLowerCase();
-    return IMAGE_FILE_EXTENSIONS.has(ext) && fs.existsSync(candidate);
-  }) || '';
-}
-
-function readClipboardImageFile() {
-  const fileText = [
-    readClipboardTextFormat('public.file-url'),
-    readClipboardTextFormat('public.url'),
-    decodeClipboardBuffer('public.file-url'),
-    decodeClipboardBuffer('public.url'),
-    decodeClipboardBuffer('NSFilenamesPboardType'),
-    clipboard.readText()
-  ].find(Boolean) || '';
-
-  const imagePath = getImagePathFromClipboardText(fileText);
-
-  if (!imagePath) {
-    return null;
-  }
-
-  const image = nativeImage.createFromPath(imagePath);
-  return image.isEmpty() ? null : image;
-}
-
-function readClipboardText() {
-  const text = clipboard.readText().trim();
-
-  if (text) {
-    return text;
-  }
-
-  const html = clipboard.readHTML().trim();
-
-  if (html) {
-    const plainText = html
-      .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-      .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/&nbsp;/gi, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    if (plainText) {
-      return plainText;
-    }
-  }
-
-  const rtf = clipboard.readRTF().trim();
-
-  if (rtf) {
-    const plainText = rtf
-      .replace(/\\par[d]?/gi, '\n')
-      .replace(/\\tab/gi, '\t')
-      .replace(/\\'[0-9a-f]{2}/gi, ' ')
-      .replace(/\\[a-z]+\d* ?/gi, ' ')
-      .replace(/[{}]/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    if (plainText) {
-      return plainText;
-    }
-  }
-
-  try {
-    const buffer = clipboard.readBuffer('public.utf8-plain-text');
-    const bufferText = buffer.toString('utf8').trim();
-
-    if (bufferText) {
-      return bufferText;
-    }
-  } catch {
-    // Ignore buffer fallback failures.
-  }
-
-  return '';
-}
-
-function getMessages() {
-  return translations[settings.language] || translations.ko;
-}
-
-function sanitizeBoolean(value, fallback) {
-  if (typeof value === 'boolean') return value;
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return fallback;
-}
-
-function sanitizeString(value, fallback = '') {
-  if (typeof value === 'string') {
-    return value.trim();
-  }
-
-  return fallback;
-}
-
-function sanitizeShortcutValue(value, fallback) {
-  const rawValue = sanitizeString(value, fallback);
-
-  if (!rawValue) {
-    return fallback;
-  }
-
-  const modifierAliasMap = {
-    cmd: 'Command',
-    command: 'Command',
-    commandorcontrol: process.platform === 'darwin' ? 'Command' : 'Control',
-    ctrl: 'Control',
-    control: 'Control',
-    alt: 'Option',
-    option: 'Option',
-    opt: 'Option',
-    shift: 'Shift'
-  };
-  const modifierOrder = ['Command', 'Control', 'Option', 'Shift'];
-  const keyAliasMap = {
-    return: 'Enter',
-    enter: 'Enter',
-    esc: 'Escape',
-    escape: 'Escape',
-    space: 'Space',
-    spacebar: 'Space',
-    tab: 'Tab',
-    delete: 'Delete',
-    del: 'Delete',
-    backspace: 'Backspace',
-    up: 'Up',
-    down: 'Down',
-    left: 'Left',
-    right: 'Right',
-    home: 'Home',
-    end: 'End',
-    pageup: 'PageUp',
-    pagedown: 'PageDown'
-  };
-
-  const tokens = rawValue
-    .split('+')
-    .map((token) => token.trim())
-    .filter(Boolean);
-
-  if (!tokens.length) {
-    return fallback;
-  }
-
-  const modifiers = new Set();
-  let key = null;
-
-  tokens.forEach((token) => {
-    const normalizedToken = token.toLowerCase();
-    const modifier = modifierAliasMap[normalizedToken];
-
-    if (modifier) {
-      modifiers.add(modifier);
-      return;
-    }
-
-    if (key) {
-      key = null;
-      return;
-    }
-
-    const aliasedKey = keyAliasMap[normalizedToken];
-
-    if (aliasedKey) {
-      key = aliasedKey;
-      return;
-    }
-
-    if (/^[a-z]$/i.test(token)) {
-      key = token.toUpperCase();
-      return;
-    }
-
-    if (/^[0-9]$/.test(token)) {
-      key = token;
-      return;
-    }
-
-    if (/^f([1-9]|1[0-9]|2[0-4])$/i.test(token)) {
-      key = token.toUpperCase();
-    }
-  });
-
-  if (!key || !modifiers.size) {
-    return fallback;
-  }
-
-  return [
-    ...modifierOrder.filter((modifier) => modifiers.has(modifier)),
-    key
-  ].join('+');
-}
-
-function sanitizeSelectValue(key, value, fallback) {
-  const allowedValues = SETTINGS_OPTIONS[key];
-
-  if (!allowedValues) {
-    return fallback;
-  }
-
-  if (allowedValues.includes(value)) {
-    return value;
-  }
-
-  if (typeof fallback === 'number') {
-    const parsed = Number(value);
-    return allowedValues.includes(parsed) ? parsed : fallback;
-  }
-
-  if (typeof fallback === 'boolean') {
-    const parsed = sanitizeBoolean(value, fallback);
-    return allowedValues.includes(parsed) ? parsed : fallback;
-  }
-
-  return fallback;
-}
-
-function sanitizeSettings(nextSettings) {
-  const sanitized = {
-    launchAtLogin: sanitizeSelectValue(
-      'launchAtLogin',
-      nextSettings.launchAtLogin,
-      defaultSettings.launchAtLogin
-    ),
-    maxHistoryItems: sanitizeSelectValue(
-      'maxHistoryItems',
-      nextSettings.maxHistoryItems,
-      defaultSettings.maxHistoryItems
-    ),
-    shortcut: sanitizeShortcutValue(
-      nextSettings.shortcut,
-      defaultSettings.shortcut
-    ),
-    ignoreDuplicates: sanitizeSelectValue(
-      'ignoreDuplicates',
-      nextSettings.ignoreDuplicates,
-      defaultSettings.ignoreDuplicates
-    ),
-    minTextLength: sanitizeSelectValue(
-      'minTextLength',
-      nextSettings.minTextLength,
-      defaultSettings.minTextLength
-    ),
-    maxTextLength: sanitizeSelectValue(
-      'maxTextLength',
-      nextSettings.maxTextLength,
-      defaultSettings.maxTextLength
-    ),
-    windowX: Number.isFinite(Number(nextSettings.windowX))
-      ? Math.round(Number(nextSettings.windowX))
-      : defaultSettings.windowX,
-    windowY: Number.isFinite(Number(nextSettings.windowY))
-      ? Math.round(Number(nextSettings.windowY))
-      : defaultSettings.windowY,
-    pauseTracking: sanitizeSelectValue(
-      'pauseTracking',
-      nextSettings.pauseTracking,
-      defaultSettings.pauseTracking
-    ),
-    autoHideOnBlur: sanitizeSelectValue(
-      'autoHideOnBlur',
-      nextSettings.autoHideOnBlur,
-      defaultSettings.autoHideOnBlur
-    ),
-    theme: sanitizeSelectValue(
-      'theme',
-      nextSettings.theme,
-      defaultSettings.theme
-    ),
-    textSize: sanitizeSelectValue(
-      'textSize',
-      nextSettings.textSize,
-      defaultSettings.textSize
-    ),
-    language: sanitizeSelectValue(
-      'language',
-      nextSettings.language,
-      defaultSettings.language
-    )
-  };
-
-  if (sanitized.minTextLength > sanitized.maxTextLength) {
-    sanitized.maxTextLength = sanitized.minTextLength;
-  }
-
-  return sanitized;
-}
-
-function createUpdateState(overrides = {}) {
-  const status = overrides.status || 'idle';
-
-  return {
-    status,
-    version: overrides.version ?? null,
-    releaseUrl: overrides.releaseUrl ?? null,
-    message: overrides.message || '',
-    canCheck: overrides.canCheck ?? status !== 'checking',
-    canOpen: overrides.canOpen ?? Boolean(overrides.releaseUrl)
-  };
-}
-
-function setUpdateState(overrides = {}) {
-  updateState = createUpdateState({
-    ...(updateState || {}),
-    ...overrides
-  });
-
-  return updateState;
-}
-
-function syncRendererState() {
-  if (!win) {
-    return;
-  }
-
-  win.webContents.send('settings-updated', settings);
-  win.webContents.send('clipboard-history-updated', clipboardHistory);
-}
+const { createClipboardHistory } = require('./main/clipboard-history');
+const { createSettingsStore } = require('./main/settings-store');
+const { createShortcutController } = require('./main/shortcuts');
+const { createTrayController } = require('./main/tray-controller');
+const { createUpdateService } = require('./main/update-service');
+const { createWindowManager } = require('./main/window-manager');
+const { registerIpcHandlers } = require('./main/ipc-handlers');
+const { sendHistory, sendRendererState } = require('./main/renderer-state');
+
+let windowManager = null;
+let trayController = null;
+let shortcutController = null;
+let clipboardHistory = null;
+let settingsStore = null;
 
 function applyLoginItemSetting() {
   app.setLoginItemSettings({
-    openAtLogin: settings.launchAtLogin
+    openAtLogin: settingsStore.get().launchAtLogin
   });
 
   console.log('Login item settings:', app.getLoginItemSettings());
 }
 
-function registerShortcut() {
-  globalShortcut.unregisterAll();
-
-  if (!settings.shortcut) return;
-
-  const success = globalShortcut.register(settings.shortcut, () => {
-    toggleWindow();
-  });
-
-  if (!success && settings.shortcut !== defaultSettings.shortcut) {
-    settings = {
-      ...settings,
-      shortcut: defaultSettings.shortcut
-    };
-    saveSettings();
-    globalShortcut.register(settings.shortcut, () => {
-      toggleWindow();
-    });
-    syncRendererState();
-  }
-
-  console.log('Shortcut registered:', settings.shortcut, success);
+function syncRendererState() {
+  sendRendererState(
+    windowManager?.getWindow(),
+    settingsStore.get(),
+    clipboardHistory.getHistory()
+  );
 }
 
 function updateSetting(key, value) {
-  settings = sanitizeSettings({
-    ...settings,
+  const settings = settingsStore.set({
     [key]: value
   });
 
   if (key === 'maxHistoryItems') {
-    const lockedItems = clipboardHistory.filter((item) => item.locked);
-    const unlockedItems = clipboardHistory.filter((item) => !item.locked);
-    const remainCount = Math.max(settings.maxHistoryItems - lockedItems.length, 0);
-
-    clipboardHistory = [
-      ...lockedItems,
-      ...unlockedItems.slice(0, remainCount)
-    ];
+    clipboardHistory.trimHistory();
   }
 
   if (key === 'launchAtLogin') {
     applyLoginItemSetting();
-    updateTrayMenu();
+    trayController.updateTrayMenu();
   }
 
   if (key === 'pauseTracking' || key === 'language') {
-    updateTrayMenu();
+    trayController.updateTrayMenu();
   }
 
   if (key === 'shortcut') {
-    registerShortcut();
+    shortcutController.registerShortcut();
   }
 
-  saveSettings();
   syncRendererState();
-
   return settings;
-}
-
-async function fetchLatestRelease() {
-  const response = await fetch(RELEASES_API_URL, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'oh-my-clipboard'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`GitHub release lookup failed (${response.status})`);
-  }
-
-  return response.json();
-}
-
-async function checkForUpdates() {
-  setUpdateState({
-    status: 'checking',
-    message: 'Checking GitHub Releases...',
-    releaseUrl: null,
-    version: null,
-    canOpen: false
-  });
-
-  try {
-    const latest = await fetchLatestRelease();
-    const currentVersion = semver.coerce(app.getVersion());
-    const latestVersion = semver.coerce(String(latest.tag_name || '').replace(/^v/, ''));
-
-    if (!latestVersion) {
-      return setUpdateState({
-        status: 'error',
-        message: 'Could not read the latest release version.',
-        canOpen: false
-      });
-    }
-
-    const isNewer = currentVersion ? semver.gt(latestVersion, currentVersion) : true;
-
-    if (!isNewer) {
-      return setUpdateState({
-        status: 'not-available',
-        version: app.getVersion(),
-        message: 'You are already on the latest version.',
-        releaseUrl: latest.html_url || null,
-        canOpen: false
-      });
-    }
-
-    return setUpdateState({
-      status: 'available',
-      version: latest.tag_name?.replace(/^v/, '') || latestVersion.version,
-      releaseUrl: latest.html_url || `https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/tag/${latest.tag_name}`,
-      message: 'A newer version is available on GitHub Releases.',
-      canOpen: true
-    });
-  } catch (error) {
-    return setUpdateState({
-      status: 'error',
-      message: error?.message || 'Update check failed.',
-      canOpen: false
-    });
-  }
-}
-
-function openUpdateRelease() {
-  if (!updateState?.releaseUrl) {
-    return updateState;
-  }
-
-  shell.openExternal(updateState.releaseUrl);
-  return updateState;
-}
-
-function createWindow() {
-  win = new BrowserWindow({
-    width: 760,
-    height: 620,
-    show: false,
-    frame: false,
-    resizable: false,
-    movable: true,
-    fullscreenable: false,
-    skipTaskbar: true,
-    alwaysOnTop: true,
-    icon: APP_ICON_PATH,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  win.loadFile('index.html');
-
-  if (!app.isPackaged && process.env.OPEN_DEVTOOLS === '1') {
-    win.webContents.openDevTools({ mode: 'detach' });
-  }
-
-  win.on('blur', () => {
-    if (settings.autoHideOnBlur) {
-      win.hide();
-    }
-  });
-
-  win.on('move', () => {
-    if (!tray || isProgrammaticWindowMove || !win.isVisible()) {
-      return;
-    }
-
-    const windowBounds = win.getBounds();
-    const nextWindowX = Math.round(windowBounds.x);
-    const nextWindowY = Math.round(windowBounds.y);
-
-    if (
-      nextWindowX === settings.windowX &&
-      nextWindowY === settings.windowY
-    ) {
-      return;
-    }
-
-    settings = {
-      ...settings,
-      windowX: nextWindowX,
-      windowY: nextWindowY
-    };
-    saveSettings();
-    syncRendererState();
-  });
-}
-
-function updateTrayMenu() {
-  if (!tray) return;
-
-  const messages = getMessages();
-
-  trayMenu = Menu.buildFromTemplate([
-    {
-      label: messages.openHistory,
-      click: () => {
-        showWindow();
-      }
-    },
-    {
-      label: messages.settings,
-      click: () => {
-        showWindow();
-        win.webContents.send('open-settings-view');
-      }
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: messages.launchAtLogin,
-      type: 'checkbox',
-      checked: settings.launchAtLogin,
-      click: (menuItem) => {
-        updateSetting('launchAtLogin', menuItem.checked);
-      }
-    },
-    {
-      label: settings.pauseTracking ? messages.resumeTracking : messages.pauseTracking,
-      click: () => {
-        updateSetting('pauseTracking', !settings.pauseTracking);
-      }
-    },
-    {
-      type: 'separator'
-    },
-    {
-      label: messages.quit,
-      click: () => {
-        app.quit();
-      }
-    }
-  ]);
-
-  tray.setToolTip(messages.appTitle);
-}
-
-function createTray() {
-  tray = new Tray(createTrayIcon());
-  tray.setTitle('OMC');
-
-  tray.on('click', () => {
-    toggleWindow();
-  });
-
-  tray.on('right-click', () => {
-    if (trayMenu) {
-      tray.popUpContextMenu(trayMenu);
-    }
-  });
-
-  updateTrayMenu();
-
-  console.log('Tray created');
-}
-
-function getTrayAnchorPosition(windowBounds) {
-  const trayBounds = tray.getBounds();
-
-  return {
-    x: Math.round(
-      trayBounds.x +
-        trayBounds.width / 2 -
-        windowBounds.width / 2
-    ),
-    y: Math.round(
-      trayBounds.y +
-        trayBounds.height +
-        6
-    )
-  };
-}
-
-function clampWindowPosition(position, windowBounds) {
-  const display = screen.getDisplayMatching({
-    x: position.x,
-    y: position.y,
-    width: windowBounds.width,
-    height: windowBounds.height
-  });
-  const workArea = display.workArea;
-
-  return {
-    x: Math.min(
-      Math.max(position.x, workArea.x),
-      workArea.x + workArea.width - windowBounds.width
-    ),
-    y: Math.min(
-      Math.max(position.y, workArea.y),
-      workArea.y + workArea.height - windowBounds.height
-    )
-  };
-}
-
-function showWindow() {
-  if (!win || !tray) return;
-
-  const windowBounds = win.getBounds();
-  const hasSavedWindowPosition =
-    Number.isFinite(settings.windowX) &&
-    Number.isFinite(settings.windowY);
-  const { x, y } = hasSavedWindowPosition
-    ? { x: settings.windowX, y: settings.windowY }
-    : getTrayAnchorPosition(windowBounds);
-  const position = clampWindowPosition({ x, y }, windowBounds);
-
-  isProgrammaticWindowMove = true;
-  win.setPosition(position.x, position.y, false);
-  setTimeout(() => {
-    isProgrammaticWindowMove = false;
-  }, 0);
-  win.show();
-  win.focus();
-
-  win.webContents.send('clipboard-history-updated', clipboardHistory);
-  win.webContents.send('settings-updated', settings);
-}
-
-function toggleWindow() {
-  if (!win) return;
-
-  if (win.isVisible()) {
-    win.hide();
-    return;
-  }
-
-  showWindow();
-}
-
-function shouldSaveClipboardText(value) {
-  if (settings.pauseTracking) return false;
-  if (!value) return false;
-  if (value.length < settings.minTextLength) return false;
-  if (value.length > settings.maxTextLength) return false;
-  if (settings.ignoreDuplicates && value === lastText) return false;
-
-  return true;
-}
-
-function trimHistory() {
-  const lockedItems = clipboardHistory.filter((item) => item.locked);
-  const unlockedItems = clipboardHistory.filter((item) => !item.locked);
-  const remainCount = Math.max(settings.maxHistoryItems - lockedItems.length, 0);
-
-  clipboardHistory = [
-    ...lockedItems,
-    ...unlockedItems.slice(0, remainCount)
-  ];
-}
-
-function addClipboardText(text) {
-  const value = text.trim();
-
-  if (!value) return;
-
-  const existingItem = clipboardHistory.find(
-    (item) => item.kind !== 'image' && item.text === value
-  );
-
-  if (existingItem) {
-    lastText = value;
-    lastClipboardSignature = `text:${value}`;
-
-    clipboardHistory = [
-      existingItem,
-      ...clipboardHistory.filter((item) => item.id !== existingItem.id)
-    ];
-
-    trimHistory();
-
-    if (win) {
-      win.webContents.send('clipboard-history-updated', clipboardHistory);
-    }
-
-    return;
-  }
-
-  if (!shouldSaveClipboardText(value)) return;
-
-  lastText = value;
-  lastClipboardSignature = `text:${value}`;
-
-  clipboardHistory = [
-    createHistoryItem(value),
-    ...clipboardHistory
-  ];
-
-  trimHistory();
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-}
-
-function addClipboardImage(image) {
-  if (!image || image.isEmpty()) {
-    return;
-  }
-
-  const imageDataUrl = image.toDataURL();
-
-  if (!imageDataUrl || lastClipboardSignature === `image:${imageDataUrl}`) {
-    return;
-  }
-
-  const existingItem = clipboardHistory.find(
-    (item) => item.kind === 'image' && item.imageDataUrl === imageDataUrl
-  );
-
-  if (existingItem) {
-    lastText = '';
-    lastClipboardSignature = `image:${imageDataUrl}`;
-
-    clipboardHistory = [
-      existingItem,
-      ...clipboardHistory.filter((item) => item.id !== existingItem.id)
-    ];
-
-    trimHistory();
-
-    if (win) {
-      win.webContents.send('clipboard-history-updated', clipboardHistory);
-    }
-
-    return;
-  }
-
-  lastText = '';
-  lastClipboardSignature = `image:${imageDataUrl}`;
-
-  clipboardHistory = [
-    createImageHistoryItem(imageDataUrl),
-    ...clipboardHistory
-  ];
-
-  trimHistory();
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-}
-
-function watchClipboard() {
-  clipboardTimer = setInterval(() => {
-    const image = readClipboardImage();
-    if (image && !image.isEmpty()) {
-      addClipboardImage(image);
-      return;
-    }
-
-    const text = readClipboardText();
-    if (text) {
-      addClipboardText(text);
-    }
-  }, 800);
 }
 
 app.whenReady().then(() => {
   console.log('App ready');
 
-  loadSettings();
-  syncClipboardBaseline();
-  applyLoginItemSetting();
-  updateState = createUpdateState({
-    status: 'idle',
-    message: 'Check for updates when you are ready.'
+  settingsStore = createSettingsStore(app);
+  settingsStore.load();
+
+  clipboardHistory = createClipboardHistory({
+    clipboard,
+    nativeImage,
+    getSettings: settingsStore.get,
+    onHistoryChanged: (history) => {
+      sendHistory(windowManager?.getWindow(), history);
+    }
   });
+
+  windowManager = createWindowManager({
+    app,
+    BrowserWindow,
+    screen,
+    getTray: () => trayController?.getTray(),
+    settingsStore,
+    getHistory: clipboardHistory.getHistory
+  });
+
+  trayController = createTrayController({
+    app,
+    Tray,
+    settingsStore,
+    showWindow: () => windowManager.showWindow(),
+    openSettingsView: () => windowManager.openSettingsView(),
+    toggleWindow: () => windowManager.toggleWindow(),
+    updateSetting
+  });
+
+  shortcutController = createShortcutController({
+    globalShortcut,
+    settingsStore,
+    toggleWindow: () => windowManager.toggleWindow(),
+    getWindow: () => windowManager.getWindow(),
+    getHistory: clipboardHistory.getHistory
+  });
+
+  const updateService = createUpdateService({ app, shell });
+
+  clipboardHistory.syncClipboardBaseline();
+  applyLoginItemSetting();
 
   if (process.platform === 'darwin') {
     app.dock.hide();
   }
 
-  createWindow();
-  createTray();
-  registerShortcut();
-  watchClipboard();
-});
+  windowManager.createWindow();
+  trayController.createTray();
+  shortcutController.registerShortcut();
+  clipboardHistory.startWatching();
 
-ipcMain.handle('get-clipboard-history', () => {
-  clipboardHistory = clipboardHistory.map(normalizeHistoryItem);
-  return clipboardHistory;
-});
-
-ipcMain.handle('copy-to-clipboard', (_event, id) => {
-  const item = clipboardHistory.find((historyItem) => historyItem.id === id);
-
-  if (!item) {
-    return clipboardHistory;
-  }
-
-  if (item.kind === 'image' && item.imageDataUrl) {
-    clipboard.writeImage(nativeImage.createFromDataURL(item.imageDataUrl));
-    lastText = '';
-  } else {
-    const text = String(item.text || '');
-    clipboard.writeText(text);
-    lastText = text;
-  }
-
-  lastClipboardSignature = getClipboardSignature(item);
-
-  if (!item.locked) {
-    const lockedItems = clipboardHistory.filter((historyItem) => historyItem.locked);
-    const unlockedItems = clipboardHistory.filter(
-      (historyItem) => !historyItem.locked && historyItem.id !== id
-    );
-
-    clipboardHistory = [
-      ...lockedItems,
-      item,
-      ...unlockedItems
-    ];
-  }
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-
-  return clipboardHistory;
-});
-
-ipcMain.handle('delete-clipboard-item', (_event, id) => {
-  const target = clipboardHistory.find((item) => item.id === id);
-
-  if (!target || target.locked) {
-    return clipboardHistory;
-  }
-
-  clipboardHistory = clipboardHistory.filter((item) => item.id !== id);
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-
-  return clipboardHistory;
-});
-
-ipcMain.handle('toggle-lock-clipboard-item', (_event, id) => {
-  clipboardHistory = clipboardHistory.map((item) => {
-    if (item.id !== id) return item;
-
-    return {
-      ...item,
-      locked: !item.locked
-    };
+  registerIpcHandlers({
+    ipcMain,
+    shell,
+    clipboardHistory,
+    settingsStore,
+    updateSetting,
+    updateService
   });
-
-  trimHistory();
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-
-  return clipboardHistory;
-});
-
-ipcMain.handle('clear-clipboard-history', () => {
-  clipboardHistory = clipboardHistory.filter((item) => item.locked);
-  syncClipboardBaseline();
-
-  if (win) {
-    win.webContents.send('clipboard-history-updated', clipboardHistory);
-  }
-
-  return clipboardHistory;
-});
-
-ipcMain.handle('get-settings', () => {
-  return settings;
-});
-
-ipcMain.handle('update-setting', (_event, key, value) => {
-  return updateSetting(key, value);
-});
-
-ipcMain.handle('check-for-updates', () => {
-  return checkForUpdates();
-});
-
-ipcMain.handle('open-update-release', () => {
-  return openUpdateRelease();
-});
-
-ipcMain.handle('open-bug-report', () => {
-  shell.openExternal('https://github.com/jgmh99/OH-MY-CLIPBOARD/issues/new');
-  return true;
-});
-
-ipcMain.handle('open-login-items-settings', () => {
-  shell.openExternal('x-apple.systempreferences:com.apple.LoginItems-Settings.extension');
 });
 
 app.on('before-quit', () => {
-  if (clipboardTimer) {
-    clearInterval(clipboardTimer);
-  }
-
-  globalShortcut.unregisterAll();
-
-  if (tray) {
-    tray.destroy();
-    tray = null;
-  }
+  clipboardHistory?.stopWatching();
+  shortcutController?.unregisterAll();
+  trayController?.destroyTray();
 });
 
 app.on('window-all-closed', (event) => {
