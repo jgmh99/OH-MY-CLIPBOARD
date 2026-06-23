@@ -1,7 +1,7 @@
-export function getShortcutDisplayParts(value) {
+export function getShortcutDisplayParts(value: string): string[] {
   if (!value) return [];
 
-  const tokenMap = {
+  const tokenMap: Record<string, string> = {
     Command: '⌘',
     Control: '⌃',
     Option: '⌥',
@@ -29,7 +29,7 @@ export function getShortcutDisplayParts(value) {
     .map((token) => tokenMap[token] || token.toUpperCase());
 }
 
-export function eventToShortcut(event) {
+export function eventToShortcut(event: KeyboardEvent): string | null {
   const modifiers = [];
 
   if (event.metaKey) modifiers.push('Command');
@@ -51,7 +51,7 @@ export function eventToShortcut(event) {
   } else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(code)) {
     key = code.toUpperCase();
   } else {
-    const keyAliasMap = {
+    const keyAliasMap: Record<string, string> = {
       ' ': 'Space',
       Spacebar: 'Space',
       Enter: 'Enter',

@@ -1,3 +1,5 @@
+import type { SettingConfig } from '../types';
+
 export const settingsConfig = [
   {
     group: 'general',
@@ -102,4 +104,4 @@ export const settingsConfig = [
       { value: false, labelKey: 'no' }
     ]
   }
-];
+] satisfies SettingConfig[];

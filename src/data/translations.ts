@@ -1,3 +1,5 @@
+import type { Language, MessageCatalog } from '../types';
+
 export const translations = {
   ko: {
     appTitle: 'Oh My Clipboard',
@@ -431,4 +433,4 @@ export const translations = {
       statusError: '检查更新时出现问题。'
     }
   }
-};
+} satisfies Record<Language, MessageCatalog>;

@@ -1,5 +1,18 @@
 import HistoryItem from './HistoryItem';
 import { filterHistory } from '../utils/history';
+import type { ClipboardHistoryItem, HistoryFilter, MessageCatalog } from '../types';
+
+type HistoryPanelProps = {
+  history: ClipboardHistoryItem[];
+  query: string;
+  filter: HistoryFilter;
+  messages: MessageCatalog;
+  onQueryChange: (query: string) => void;
+  onClearSearch: () => void;
+  onCopy: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleLock: (id: string) => void;
+};
 
 export default function HistoryPanel({
   history,
@@ -11,7 +24,7 @@ export default function HistoryPanel({
   onCopy,
   onDelete,
   onToggleLock
-}) {
+}: HistoryPanelProps) {
   const visibleHistory = filterHistory(history, query, messages, filter);
 
   return (

@@ -6,12 +6,12 @@
     <title>Oh My Clipboard</title>
     <meta
       name="description"
-      content="복사한 순간을 놓치지 않는 macOS 메뉴바 클립보드 앱, Oh My Clipboard."
+      content="macOS 메뉴바에서 복사 기록을 검색, 고정, 재사용하는 클립보드 히스토리 앱."
     />
     <meta property="og:title" content="Oh My Clipboard" />
     <meta
       property="og:description"
-      content="필요한 문장을 다시 찾고, 고정하고, 바로 꺼내 쓰는 macOS 클립보드."
+      content="복사한 텍스트를 메뉴바에서 빠르게 다시 꺼내세요."
     />
     <meta property="og:type" content="website" />
     <meta
@@ -22,244 +22,242 @@
       rel="icon"
       href="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-32.png"
     />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      as="style"
-      crossorigin
-      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
-    />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="page-shell">
-      <header class="topbar">
-        <a class="brand" href="https://github.com/jgmh99/OH-MY-CLIPBOARD">
+    <header class="global-nav">
+      <div class="scroll-progress" id="scroll-progress"></div>
+      <a class="brand" href="https://github.com/jgmh99/OH-MY-CLIPBOARD">
+        <img
+          src="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-64.png"
+          alt=""
+        />
+        <span>Oh My Clipboard</span>
+      </a>
+      <nav aria-label="페이지 이동">
+        <a href="#preview" data-i18n="nav.preview">미리보기</a>
+        <a href="#details" data-i18n="nav.features">기능</a>
+        <a href="#install" data-i18n="nav.install">설치</a>
+      </nav>
+      <div class="language-switcher" aria-label="Language">
+        <button class="active" type="button" data-lang="ko">KO</button>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="ja">JA</button>
+        <button type="button" data-lang="zh">ZH</button>
+      </div>
+      <a class="download-link" href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest">
+        <span data-i18n="nav.download">다운로드</span>
+      </a>
+    </header>
+
+    <main>
+      <section class="product-hero reveal">
+        <p class="eyebrow" data-i18n="hero.eyebrow">macOS Menu Bar Clipboard</p>
+        <h1 data-i18n="hero.title">복사한 텍스트가, 필요할 때 다시 나타납니다.</h1>
+        <p class="intro" data-i18n="hero.intro">
+          메뉴바에 머무는 클립보드 히스토리. 최근 기록을 검색하고, 중요한 항목을
+          잠그고, 클릭 한 번으로 다시 복사하세요.
+        </p>
+        <div class="hero-actions">
+          <a class="primary-action" href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest">
+            <span data-i18n="hero.primary">다운로드</span>
+          </a>
+          <a class="secondary-action" href="https://github.com/jgmh99/OH-MY-CLIPBOARD">
+            <span data-i18n="hero.secondary">GitHub에서 보기</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="product-preview reveal" id="preview" aria-label="앱 미리보기">
+        <div class="preview-copy">
+          <p class="eyebrow" data-i18n="preview.eyebrow">Designed like a native macOS utility</p>
+          <h2 data-i18n="preview.title">익숙한 macOS 창 안에, 필요한 기록만.</h2>
+        </div>
+        <div class="app-window" id="app-window">
+          <header class="screen-header">
+            <div>
+              <p class="app-eyebrow" data-i18n="app.eyebrow">Clipboard</p>
+              <h2 data-i18n="app.title">클립보드 기록</h2>
+            </div>
+            <button type="button" id="clear-history" data-i18n="app.clear">지우기</button>
+          </header>
+
+          <div class="app-body">
+            <nav class="app-sidebar" aria-label="앱 섹션">
+              <button class="active" type="button" data-view="all">
+                <span>⌘</span>
+                <span data-i18n="app.navAll">전체</span>
+              </button>
+              <button type="button" data-view="locked">
+                <span>🔒</span>
+                <span data-i18n="app.navLocked">잠금됨</span>
+              </button>
+              <button type="button" data-view="settings">
+                <span>⚙</span>
+                <span data-i18n="app.navSettings">설정</span>
+              </button>
+            </nav>
+
+            <section class="history-panel" data-panel="history">
+              <div class="search-row">
+                <label>
+                  <span>⌕</span>
+                  <input
+                    id="demo-search"
+                    type="search"
+                    placeholder="히스토리 검색"
+                    data-i18n-placeholder="app.search"
+                    autocomplete="off"
+                  />
+                </label>
+                <button type="button" id="clear-search">×</button>
+              </div>
+
+              <div class="history-list" id="history-list">
+                <article class="history-item" data-locked="false">
+                  <button type="button" class="history-copy">
+                    <small data-i18n="app.textType">텍스트</small>
+                    <strong>https://github.com/jgmh99/OH-MY-CLIPBOARD/releases</strong>
+                  </button>
+                  <div class="history-actions">
+                    <button type="button" data-action="lock"></button>
+                    <button type="button" data-action="delete" data-i18n="app.delete">삭제</button>
+                  </div>
+                </article>
+                <article class="history-item locked" data-locked="true">
+                  <button type="button" class="history-copy">
+                    <small data-i18n="app.textType">텍스트</small>
+                    <strong data-i18n="app.samplePinned">문의 감사합니다. 확인 후 다시 안내드리겠습니다.</strong>
+                  </button>
+                  <div class="history-actions">
+                    <button type="button" data-action="lock"></button>
+                    <button type="button" data-action="delete" disabled data-i18n="app.delete">삭제</button>
+                  </div>
+                </article>
+                <article class="history-item" data-locked="false">
+                  <button type="button" class="history-copy">
+                    <small data-i18n="app.textType">텍스트</small>
+                    <strong>DMG notarization checklist</strong>
+                  </button>
+                  <div class="history-actions">
+                    <button type="button" data-action="lock"></button>
+                    <button type="button" data-action="delete" data-i18n="app.delete">삭제</button>
+                  </div>
+                </article>
+              </div>
+              <p class="empty-state" id="empty-state" hidden>검색 결과가 없습니다.</p>
+            </section>
+
+            <section class="settings-panel" data-panel="settings" hidden>
+              <article class="settings-group">
+                <header>
+                  <p class="app-eyebrow">General</p>
+                  <h3 data-i18n="settings.general">일반</h3>
+                </header>
+                <div class="setting-row">
+                  <div>
+                    <strong data-i18n="settings.launch">로그인 시 실행</strong>
+                    <span data-i18n="settings.launchDesc">macOS 로그인 후 자동으로 시작합니다.</span>
+                  </div>
+                  <button class="toggle on" type="button" aria-pressed="true"></button>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <strong data-i18n="settings.shortcut">단축키</strong>
+                    <span data-i18n="settings.shortcutDesc">메뉴바 창을 빠르게 엽니다.</span>
+                  </div>
+                  <button class="shortcut" type="button">⌘ ⇧ V</button>
+                </div>
+              </article>
+
+              <article class="settings-group">
+                <header>
+                  <p class="app-eyebrow">History</p>
+                  <h3 data-i18n="settings.history">히스토리</h3>
+                </header>
+                <div class="setting-row">
+                  <div>
+                    <strong data-i18n="settings.limit">기록 개수</strong>
+                    <span data-i18n="settings.limitDesc">저장할 최근 항목 수를 정합니다.</span>
+                  </div>
+                  <div class="segmented" aria-label="기록 개수">
+                    <button type="button">20</button>
+                    <button class="active" type="button">50</button>
+                    <button type="button">100</button>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <strong data-i18n="settings.theme">테마</strong>
+                    <span data-i18n="settings.themeDesc">시스템 설정에 맞춰 표시합니다.</span>
+                  </div>
+                  <div class="segmented" aria-label="테마">
+                    <button class="active" type="button">System</button>
+                    <button type="button">Light</button>
+                    <button type="button">Dark</button>
+                  </div>
+                </div>
+              </article>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="statement reveal">
+        <h2 data-i18n="statement.title">잃어버린 복사를 찾느라 흐름을 멈추지 마세요.</h2>
+        <p data-i18n="statement.body">
+          최근 기록, 잠금 항목, 설정이 한 화면에 정리됩니다. 필요한 문장을 찾고
+          다시 복사하는 데 몇 초면 충분합니다.
+        </p>
+      </section>
+
+      <section class="detail-grid reveal" id="details">
+        <article class="feature-tile">
+          <h3 data-i18n="features.searchTitle">검색</h3>
+          <p data-i18n="features.searchBody">방금 전 링크부터 오래된 문장까지, 입력하는 순간 필요한 기록만 좁혀집니다.</p>
+        </article>
+        <article class="feature-tile">
+          <h3 data-i18n="features.lockTitle">잠금</h3>
+          <p data-i18n="features.lockBody">반복해서 쓰는 답변, 링크, 체크리스트는 지워지지 않게 따로 남깁니다.</p>
+        </article>
+        <article class="feature-tile">
+          <h3 data-i18n="features.settingsTitle">설정</h3>
+          <p data-i18n="features.settingsBody">기록 개수, 텍스트 길이, 자동 닫기, 테마와 언어를 작업 방식에 맞게 조정합니다.</p>
+        </article>
+      </section>
+
+      <section class="install-card reveal" id="install">
+        <div class="install-summary">
           <img
-            src="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-64.png"
-            alt="Oh My Clipboard icon"
-            class="brand__icon"
+            src="https://cdn.jsdelivr.net/gh/jgmh99/OH-MY-CLIPBOARD@main/icons/oh-my-clipboard-128.png"
+            alt=""
           />
           <div>
-            <span class="brand__eyebrow">macOS Menu Bar App</span>
-            <strong class="brand__name">Oh My Clipboard</strong>
+            <h2 data-i18n="install.title">DMG를 내려받고 메뉴바에서 시작하세요.</h2>
+            <p data-i18n="install.body">최신 릴리즈를 설치한 뒤 앱을 실행하면, 복사 기록이 조용히 쌓이기 시작합니다.</p>
           </div>
-        </a>
-
-        <nav class="topbar__actions">
-          <a class="button button--ghost" href="#features">기능</a>
-          <a
-            class="button button--ghost"
-            href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases"
-          >
-            릴리즈
+          <a href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest">
+            <span data-i18n="install.cta">다운로드</span>
           </a>
-          <a
-            class="button button--primary"
-            href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
-          >
-            다운로드
-          </a>
-        </nav>
-      </header>
+        </div>
 
-      <main class="content">
-        <section class="hero">
-          <div class="hero__copy">
-            <p class="section-kicker">Clipboard, without friction</p>
-            <h1>
-              Oh My Clipboard
-              <span>복사한 순간을</span>
-              다시 꺼내다
-            </h1>
-            <p class="hero__body">
-              자주 잃어버리는 문장, 방금 복사한 링크, 오래 붙잡아야 하는
-              메모까지. 메뉴바 안에서 조용히 모아두고 필요한 순간 바로
-              꺼내세요.
-            </p>
-
-            <div class="hero__actions">
-              <a
-                class="button button--primary"
-                href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
-              >
-                최신 버전 받기
-              </a>
-              <a
-                class="button button--secondary"
-                href="https://github.com/jgmh99/OH-MY-CLIPBOARD"
-              >
-                GitHub 보기
-              </a>
-            </div>
-
-            <ul class="hero__stats">
-              <li>
-                <strong>Menu Bar</strong>
-                <span>작업 흐름을 끊지 않는 접근</span>
-              </li>
-              <li>
-                <strong>Multi-language</strong>
-                <span>한국어, English, 日本語, 中文 지원</span>
-              </li>
-              <li>
-                <strong>Release-based</strong>
-                <span>최신 버전을 바로 확인</span>
-              </li>
-            </ul>
-          </div>
-
-          <div class="hero__visual">
-            <div class="mockup glass-panel">
-              <div class="mockup__topbar">
-                <div class="mockup__dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <span class="mockup__title">Oh My Clipboard</span>
-                <span class="mockup__badge">Live History</span>
-              </div>
-
-              <div class="mockup__body">
-                <aside class="mockup__sidebar">
-                  <button class="mockup__pill mockup__pill--active">최근</button>
-                  <button class="mockup__pill">고정됨</button>
-                  <button class="mockup__pill">설정</button>
-                </aside>
-
-                <div class="mockup__panel">
-                  <div class="mockup__search">히스토리 검색</div>
-
-                  <div class="history-card">
-                    <div class="history-card__icon">⌘</div>
-                    <div class="history-card__copy">
-                      <strong>오늘 보낼 회의 링크</strong>
-                      <span>방금 복사됨</span>
-                    </div>
-                    <button class="history-card__action">복사</button>
-                  </div>
-
-                  <div class="history-card history-card--muted">
-                    <div class="history-card__icon">🔒</div>
-                    <div class="history-card__copy">
-                      <strong>자주 쓰는 답변 문구</strong>
-                      <span>고정된 항목</span>
-                    </div>
-                    <button class="history-card__action">열기</button>
-                  </div>
-
-                  <div class="mockup__settings">
-                    <div>
-                      <span>클립보드 추적</span>
-                      <small>필요할 때만 켜고 끄기</small>
-                    </div>
-                    <div class="toggle toggle--on">
-                      <span></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="floating-note glass-panel">
-              <span class="floating-note__label">작게 열고 빠르게 복사</span>
-              <p>
-                창을 크게 띄우지 않아도, 방금 지나간 텍스트를 다시 붙잡을 수
-                있습니다.
-              </p>
+        <aside class="install-notice" role="note">
+          <div class="install-notice-copy">
+            <span class="install-notice-icon" aria-hidden="true">!</span>
+            <div>
+              <h3 data-i18n="install.noticeTitle">첫 실행이 막히면 이렇게 허용하세요.</h3>
+              <p data-i18n="install.noticeBody">이 앱은 Apple Developer ID로 서명되지 않아 macOS가 경고를 표시합니다. 계속하려면 아래 절차로 직접 허용해야 합니다.</p>
             </div>
           </div>
-        </section>
-
-        <section class="feature-strip" id="features">
-          <article class="feature-card glass-panel">
-            <div class="feature-card__icon" aria-hidden="true">⌘</div>
-            <span class="feature-card__index">01</span>
-            <h2>메뉴바에서 바로 열기</h2>
-            <p>
-              작업 중인 창을 벗어나지 않고 최근 복사한 텍스트를 빠르게 다시
-              꺼냅니다.
-            </p>
-          </article>
-
-          <article class="feature-card glass-panel">
-            <div class="feature-card__icon" aria-hidden="true">🔒</div>
-            <span class="feature-card__index">02</span>
-            <h2>중요한 문장은 잠금</h2>
-            <p>
-              자주 쓰는 답변, 링크, 메모는 잠가두고 정리할 때도 남겨둘 수
-              있습니다.
-            </p>
-          </article>
-
-          <article class="feature-card glass-panel">
-            <div class="feature-card__icon" aria-hidden="true">⚙</div>
-            <span class="feature-card__index">03</span>
-            <h2>내 방식에 맞게 조정</h2>
-            <p>
-              기록 개수, 텍스트 길이, 테마, 자동 닫기까지 작업 습관에 맞게
-              바꿀 수 있습니다.
-            </p>
-          </article>
-        </section>
-
-        <section class="details">
-          <article class="details__panel glass-panel">
-            <p class="section-kicker">What it includes</p>
-            <h2>필요한 것만 담았습니다</h2>
-            <ul class="feature-list">
-              <li>최근 복사한 텍스트 모아보기</li>
-              <li>다시 복사, 삭제, 잠금 처리</li>
-              <li>한국어, English, 日本語, 中文 UI</li>
-              <li>테마와 동작 방식 설정</li>
-              <li>새 릴리즈 확인과 다운로드 연결</li>
-            </ul>
-          </article>
-
-          <article class="details__panel glass-panel">
-            <p class="section-kicker">Installation</p>
-            <h2>DMG로 간단하게 설치</h2>
-            <ol class="steps">
-              <li>최신 릴리즈에서 DMG를 받습니다.</li>
-              <li>앱을 Applications 폴더로 옮깁니다.</li>
-              <li>실행하면 메뉴바에서 바로 사용할 수 있습니다.</li>
-            </ol>
-          </article>
-        </section>
-
-        <section class="cta glass-panel">
-          <div>
-            <p class="section-kicker">Ready to use</p>
-            <h2>복사한 텍스트를 더 오래 붙잡아두세요.</h2>
-            <p>
-              최신 릴리즈를 내려받고, 메뉴바에서 필요한 기록을 바로 다시
-              꺼내면 됩니다.
-            </p>
-          </div>
-
-          <div class="cta__actions">
-            <a
-              class="button button--primary"
-              href="https://github.com/jgmh99/OH-MY-CLIPBOARD/releases/latest"
-            >
-              다운로드
-            </a>
-            <a
-              class="button button--secondary"
-              href="https://github.com/jgmh99/OH-MY-CLIPBOARD"
-            >
-              저장소 보기
-            </a>
-          </div>
-        </section>
-      </main>
-    </div>
+          <ol>
+            <li data-i18n="install.step1">DMG를 열고 Oh My Clipboard를 응용 프로그램 폴더로 드래그합니다.</li>
+            <li data-i18n="install.step2">응용 프로그램에서 앱을 한 번 실행해 macOS 경고를 확인합니다.</li>
+            <li data-i18n="install.step3">시스템 설정 → 개인정보 보호 및 보안에서 아래로 내려 확인 없이 열기를 누른 뒤 다시 엽니다.</li>
+          </ol>
+          <p class="install-requirements" data-i18n="install.requirements">현재 배포판은 Apple Silicon(M1 이상) 및 macOS 12 이상을 지원합니다.</p>
+        </aside>
+      </section>
+    </main>
 
     <script src="./app.js"></script>
   </body>

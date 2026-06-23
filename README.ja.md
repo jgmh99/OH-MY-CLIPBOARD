@@ -85,7 +85,7 @@ OS レベルの機能は main プロセスが担当し、renderer は `preload.j
 
 ```text
 src/
-  App.jsx
+  App.tsx
   clipboard-api.js
   components/
     HistoryPanel.jsx
@@ -97,8 +97,8 @@ src/
     Sidebar.jsx
     Toast.jsx
   data/
-    settings-config.js
-    translations.js
+    settings-config.ts
+    translations.ts
   utils/
     history.js
     messages.js
@@ -107,7 +107,7 @@ src/
     updates.js
 ```
 
-`App.jsx` は状態管理と Electron API 呼び出しをまとめ、UI は小さなコンポーネントに分割しています。設定画面は `settings-config.js` のメタデータから描画されるため、拡張しやすい構成です。
+`App.tsx` は状態管理と Electron API 呼び出しをまとめ、UI は小さなコンポーネントに分割しています。設定画面は `settings-config.ts` のメタデータから描画されるため、拡張しやすい構成です。
 
 ## 実行方法
 
@@ -156,6 +156,16 @@ npm run dist
 - 紹介ページ: https://jgmh99.github.io/OH-MY-CLIPBOARD/
 - 最新リリース: https://github.com/jgmh99/OH-MY-CLIPBOARD/releases
 - リリースファイル: `Oh My Clipboard-...-arm64.dmg`
+
+### 未署名アプリの起動方法
+
+現在のDMGはApple Developer IDで署名されていないため、初回起動時にmacOSによってブロックされる場合があります。
+
+1. DMGを開き、`Oh My Clipboard`を`アプリケーション`フォルダへドラッグします。
+2. `アプリケーション`から一度起動し、macOSの警告を表示します。
+3. `システム設定 → プライバシーとセキュリティ`を開いて下へスクロールし、`このまま開く`を押してから再度起動します。
+
+現在のリリースはApple Silicon（M1以降）とmacOS 12以降に対応しています。
 
 ## リリース
 

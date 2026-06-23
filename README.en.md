@@ -85,7 +85,7 @@ The main process owns OS-level capabilities. The renderer only uses the limited 
 
 ```text
 src/
-  App.jsx
+  App.tsx
   clipboard-api.js
   components/
     HistoryPanel.jsx
@@ -97,8 +97,8 @@ src/
     Sidebar.jsx
     Toast.jsx
   data/
-    settings-config.js
-    translations.js
+    settings-config.ts
+    translations.ts
   utils/
     history.js
     messages.js
@@ -107,7 +107,7 @@ src/
     updates.js
 ```
 
-`App.jsx` coordinates state and Electron API calls. UI details live in focused components. Settings are rendered from metadata in `settings-config.js`, making the preferences screen easier to extend.
+`App.tsx` coordinates state and Electron API calls. UI details live in focused components. Settings are rendered from metadata in `settings-config.ts`, making the preferences screen easier to extend.
 
 ## Run Locally
 
@@ -156,6 +156,16 @@ To reset the app, quit it and remove that folder.
 - Product page: https://jgmh99.github.io/OH-MY-CLIPBOARD/
 - Latest release: https://github.com/jgmh99/OH-MY-CLIPBOARD/releases
 - Release asset: `Oh My Clipboard-...-arm64.dmg`
+
+### Opening the unsigned app
+
+The current DMG is not signed with an Apple Developer ID, so macOS may block its first launch.
+
+1. Open the DMG and drag `Oh My Clipboard` into the `Applications` folder.
+2. Launch the app once from `Applications` to trigger the macOS warning.
+3. Open `System Settings → Privacy & Security`, scroll down, click `Open Anyway`, then open the app again.
+
+The current release supports Apple Silicon (M1 or later) and macOS 12 or later.
 
 ## Release Flow
 

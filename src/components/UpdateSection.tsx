@@ -1,5 +1,15 @@
 import { formatMessage } from '../utils/messages';
 import { getUpdateStatusText } from '../utils/updates';
+import type { MessageCatalog, UpdateState } from '../types';
+
+type UpdateSectionProps = {
+  messages: MessageCatalog;
+  updateState: UpdateState;
+  onCheckUpdates: () => void;
+  onOpenUpdate: () => void;
+  onDismissUpdate: () => void;
+  onReportBug: () => void;
+};
 
 export default function UpdateSection({
   messages,
@@ -8,7 +18,7 @@ export default function UpdateSection({
   onOpenUpdate,
   onDismissUpdate,
   onReportBug
-}) {
+}: UpdateSectionProps) {
   const actionVisible = updateState.status === 'available';
 
   return (

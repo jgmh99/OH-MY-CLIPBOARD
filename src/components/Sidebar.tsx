@@ -1,5 +1,13 @@
-export default function Sidebar({ activeView, messages, onSelect }) {
-  const items = [
+import type { ActiveView, MessageCatalog } from '../types';
+
+type SidebarProps = {
+  activeView: ActiveView;
+  messages: MessageCatalog;
+  onSelect: (view: ActiveView) => void;
+};
+
+export default function Sidebar({ activeView, messages, onSelect }: SidebarProps) {
+  const items: Array<[ActiveView, string]> = [
     ['all', '⌘'],
     ['locked', '🔒'],
     ['settings', '⚙']

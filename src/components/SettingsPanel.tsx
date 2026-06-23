@@ -2,8 +2,24 @@ import { useMemo } from 'react';
 import SettingRow from './SettingRow';
 import UpdateSection from './UpdateSection';
 import { settingsConfig } from '../data/settings-config';
+import type { MessageCatalog, SettingConfig, SettingValue, Settings, UpdateState } from '../types';
 
-const groupOrder = ['general', 'history', 'behavior'];
+const groupOrder: SettingConfig['group'][] = ['general', 'history', 'behavior'];
+
+type SettingsPanelProps = {
+  settings: Settings;
+  messages: MessageCatalog;
+  updateState: UpdateState;
+  recordingKey: keyof Settings | null;
+  invalidShortcutMessage: string;
+  onChangeSetting: (key: keyof Settings, value: SettingValue) => void;
+  onSetRecordingKey: (key: keyof Settings | null) => void;
+  onCheckUpdates: () => void;
+  onOpenUpdate: () => void;
+  onDismissUpdate: () => void;
+  onReportBug: () => void;
+  onOpenLoginSettings: () => void;
+};
 
 export default function SettingsPanel({
   settings,
@@ -18,7 +34,7 @@ export default function SettingsPanel({
   onDismissUpdate,
   onReportBug,
   onOpenLoginSettings
-}) {
+}: SettingsPanelProps) {
   const groupedConfig = useMemo(() => groupOrder.map((group) => ({
     group,
     items: settingsConfig.filter((item) => item.group === group)

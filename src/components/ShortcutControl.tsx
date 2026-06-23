@@ -1,6 +1,21 @@
 import { getShortcutDisplayParts } from '../utils/shortcuts';
+import type { MessageCatalog, SettingValue } from '../types';
 
-export default function ShortcutControl({ value, messages, isRecording, onSetRecording, onChange }) {
+type ShortcutControlProps = {
+  value: string;
+  messages: MessageCatalog;
+  isRecording: boolean;
+  onSetRecording: (isRecording: boolean) => void;
+  onChange: (value: SettingValue) => void;
+};
+
+export default function ShortcutControl({
+  value,
+  messages,
+  isRecording,
+  onSetRecording,
+  onChange
+}: ShortcutControlProps) {
   const parts = getShortcutDisplayParts(value);
 
   return (

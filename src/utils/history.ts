@@ -1,4 +1,6 @@
-function getHistorySearchableText(item, messages) {
+import type { ClipboardHistoryItem, HistoryFilter, MessageCatalog } from '../types';
+
+function getHistorySearchableText(item: ClipboardHistoryItem, messages: MessageCatalog): string {
   if (item.kind === 'image') {
     return [messages.imageItem, item.altText || '', item.note || ''].join(' ').trim();
   }
@@ -6,7 +8,12 @@ function getHistorySearchableText(item, messages) {
   return [item.text || '', item.note || ''].join(' ').trim();
 }
 
-export function filterHistory(history, query, messages, filter) {
+export function filterHistory(
+  history: ClipboardHistoryItem[],
+  query: string,
+  messages: MessageCatalog,
+  filter: HistoryFilter
+): ClipboardHistoryItem[] {
   const normalizedQuery = query.trim().toLowerCase();
   const filteredByType = filter === 'locked'
     ? history.filter((item) => item.locked)

@@ -6,13 +6,31 @@ import Sidebar from './components/Sidebar';
 import Toast from './components/Toast';
 import { translations } from './data/translations';
 import { eventToShortcut } from './utils/shortcuts';
+import type {
+  ActiveView,
+  ClipboardHistoryItem,
+  Language,
+  SettingValue,
+  Settings,
+  UpdateState
+} from './types';
 
-const defaultSettings = {
+const defaultSettings: Settings = {
+  launchAtLogin: false,
+  maxHistoryItems: 20,
+  shortcut: 'Command+Shift+V',
+  ignoreDuplicates: true,
+  minTextLength: 1,
+  maxTextLength: 5000,
+  windowX: null,
+  windowY: null,
+  pauseTracking: false,
+  autoHideOnBlur: true,
   theme: 'system',
   textSize: 13,
   language: 'ko'
 };
-const defaultUpdateState = {
+const defaultUpdateState: UpdateState = {
   status: 'idle',
   version: null,
   releaseUrl: null,
@@ -22,16 +40,16 @@ const defaultUpdateState = {
 };
 
 export default function App() {
-  const [history, setHistory] = useState([]);
+  const [history, setHistory] = useState<ClipboardHistoryItem[]>([]);
   const [settings, setSettings] = useState(defaultSettings);
   const [query, setQuery] = useState('');
-  const [activeView, setActiveView] = useState('all');
+  const [activeView, setActiveView] = useState<ActiveView>('all');
   const [updateState, setUpdateState] = useState(defaultUpdateState);
-  const [recordingKey, setRecordingKey] = useState(null);
+  const [recordingKey, setRecordingKey] = useState<keyof Settings | null>(null);
   const [invalidShortcutMessage, setInvalidShortcutMessage] = useState('');
   const [toast, setToast] = useState({ message: '', visible: false });
 
-  const messages = translations[settings.language] || translations.ko;
+  const messages = translations[settings.language as Language] || translations.ko;
   const historyFilter = activeView === 'locked' ? 'locked' : 'all';
 
   useEffect(() => {
@@ -61,7 +79,7 @@ export default function App() {
   useEffect(() => {
     if (!recordingKey) return undefined;
 
-    function handleKeyDown(event) {
+    function handleKeyDown(event: KeyboardEvent) {
       event.preventDefault();
       event.stopPropagation();
 
@@ -80,7 +98,9 @@ export default function App() {
 
       setRecordingKey(null);
       setInvalidShortcutMessage('');
-      updateSetting(recordingKey, nextShortcut);
+      if (recordingKey) {
+        updateSetting(recordingKey, nextShortcut);
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown, true);
@@ -97,31 +117,31 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [toast.visible, toast.message]);
 
-  function showToast(message) {
+  function showToast(message: string) {
     setToast({ message, visible: false });
     window.requestAnimationFrame(() => {
       setToast({ message, visible: true });
     });
   }
 
-  async function updateSetting(key, value) {
+  async function updateSetting(key: keyof Settings, value: SettingValue) {
     const nextSettings = await clipboardApi.updateSetting(key, value);
     setSettings(nextSettings);
   }
 
-  async function copyItem(id) {
+  async function copyItem(id: string) {
     await clipboardApi.copyText(id);
     showToast(messages.copiedToast);
   }
 
-  async function toggleLockItem(id) {
+  async function toggleLockItem(id: string) {
     const updatedHistory = await clipboardApi.toggleLockItem(id);
     setHistory(updatedHistory);
     const updatedItem = updatedHistory.find((item) => item.id === id);
     showToast(updatedItem?.locked ? messages.lockedFeedback : messages.unlockedFeedback);
   }
 
-  async function deleteItem(id) {
+  async function deleteItem(id: string) {
     const updatedHistory = await clipboardApi.deleteItem(id);
     setHistory(updatedHistory);
   }

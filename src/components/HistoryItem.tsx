@@ -1,4 +1,14 @@
-export default function HistoryItem({ item, messages, onCopy, onDelete, onToggleLock }) {
+import type { ClipboardHistoryItem, MessageCatalog } from '../types';
+
+type HistoryItemProps = {
+  item: ClipboardHistoryItem;
+  messages: MessageCatalog;
+  onCopy: (id: string) => void;
+  onDelete: (id: string) => void;
+  onToggleLock: (id: string) => void;
+};
+
+export default function HistoryItem({ item, messages, onCopy, onDelete, onToggleLock }: HistoryItemProps) {
   const previewText = item.text && item.text.length > 180
     ? `${item.text.slice(0, 180)}...`
     : item.text;

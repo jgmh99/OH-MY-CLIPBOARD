@@ -1,3 +1,5 @@
+import type { ClipboardApi, Settings } from './types';
+
 const fallbackSettings = {
   launchAtLogin: false,
   maxHistoryItems: 20,
@@ -12,9 +14,9 @@ const fallbackSettings = {
   theme: 'system',
   textSize: 13,
   language: 'ko'
-};
+} satisfies Settings;
 
-function createFallbackApi() {
+function createFallbackApi(): ClipboardApi {
   let settings = { ...fallbackSettings };
 
   return {
@@ -48,4 +50,4 @@ function createFallbackApi() {
   };
 }
 
-export const clipboardApi = window.clipboardApp || createFallbackApi();
+export const clipboardApi: ClipboardApi = window.clipboardApp || createFallbackApi();

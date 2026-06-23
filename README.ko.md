@@ -85,7 +85,7 @@ src/
 
 ```text
 src/
-  App.jsx
+  App.tsx
   clipboard-api.js
   components/
     HistoryPanel.jsx
@@ -97,8 +97,8 @@ src/
     Sidebar.jsx
     Toast.jsx
   data/
-    settings-config.js
-    translations.js
+    settings-config.ts
+    translations.ts
   utils/
     history.js
     messages.js
@@ -107,7 +107,7 @@ src/
     updates.js
 ```
 
-`App.jsx`는 앱 상태와 Electron API 호출을 조립하고, 실제 화면은 `components/` 아래의 작은 컴포넌트가 담당합니다. 설정 항목은 `settings-config.js`의 메타데이터를 기반으로 렌더링되어, 새 설정을 추가할 때 UI 변경 범위를 줄일 수 있습니다.
+`App.tsx`는 앱 상태와 Electron API 호출을 조립하고, 실제 화면은 `components/` 아래의 작은 컴포넌트가 담당합니다. 설정 항목은 `settings-config.ts`의 메타데이터를 기반으로 렌더링되어, 새 설정을 추가할 때 UI 변경 범위를 줄일 수 있습니다.
 
 ## 실행
 
@@ -156,6 +156,16 @@ npm run dist
 - 소개 페이지: https://jgmh99.github.io/OH-MY-CLIPBOARD/
 - 최신 릴리즈: https://github.com/jgmh99/OH-MY-CLIPBOARD/releases
 - 릴리즈 파일: `Oh My Clipboard-...-arm64.dmg`
+
+### 서명되지 않은 앱 실행
+
+현재 DMG는 Apple Developer ID로 서명되지 않아 첫 실행 시 macOS가 앱을 차단할 수 있습니다.
+
+1. DMG를 열고 `Oh My Clipboard`를 `응용 프로그램` 폴더로 드래그합니다.
+2. `응용 프로그램`에서 앱을 한 번 실행해 macOS 경고를 표시합니다.
+3. `시스템 설정 → 개인정보 보호 및 보안`에서 아래로 내려 `확인 없이 열기`를 누른 뒤 앱을 다시 엽니다.
+
+현재 릴리즈는 Apple Silicon(M1 이상)과 macOS 12 이상을 지원합니다.
 
 ## 배포
 

@@ -1,6 +1,7 @@
 import { formatMessage } from './messages';
+import type { MessageCatalog, UpdateState } from '../types';
 
-export function getUpdateStatusText(updateState, messages) {
+export function getUpdateStatusText(updateState: UpdateState, messages: MessageCatalog): string {
   switch (updateState.status) {
     case 'checking':
       return messages.updates.statusChecking;

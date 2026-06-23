@@ -1,6 +1,22 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import ShortcutControl from './ShortcutControl';
 import { getOptionLabel, parseValue, serializeValue } from '../utils/settings';
+import type { MessageCatalog, SettingConfig, SettingValue } from '../types';
+
+type SegmentStyle = CSSProperties & {
+  '--segment-count': string;
+};
+
+type SettingRowProps = {
+  config: SettingConfig;
+  value: SettingValue | null;
+  messages: MessageCatalog;
+  isRecording: boolean;
+  invalidShortcutMessage: string;
+  onChange: (value: SettingValue) => void;
+  onSetRecording: (isRecording: boolean) => void;
+};
 
 export default function SettingRow({
   config,
@@ -10,7 +26,7 @@ export default function SettingRow({
   invalidShortcutMessage,
   onChange,
   onSetRecording
-}) {
+}: SettingRowProps) {
   const [open, setOpen] = useState(false);
   const options = config.options.map((option) => ({
     ...option,
@@ -24,7 +40,7 @@ export default function SettingRow({
       ? `${messages.descriptions[config.key]} ${messages.shortcuts.hint}`
       : messages.descriptions[config.key]);
 
-  function commitValue(nextSerializedValue) {
+  function commitValue(nextSerializedValue: string) {
     onChange(parseValue(config.type, nextSerializedValue));
     setOpen(false);
   }
@@ -49,7 +65,7 @@ export default function SettingRow({
           </div>
         )}
         {config.control === 'segmented' && (
-          <div className="segmented" style={{ '--segment-count': String(options.length) }}>
+          <div className="segmented" style={{ '--segment-count': String(options.length) } as SegmentStyle}>
             {options.map((option) => (
               <button
                 key={option.serializedValue}
@@ -84,7 +100,7 @@ export default function SettingRow({
         )}
         {config.control === 'shortcut' && (
           <ShortcutControl
-            value={value || ''}
+            value={String(value || '')}
             messages={messages}
             isRecording={isRecording}
             onSetRecording={onSetRecording}
