@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="460" viewBox="0 0 720 460">
+  <rect width="720" height="460" fill="#f7f8fb"/>
+  <rect x="0" y="0" width="720" height="460" fill="#ffffff" opacity="0.72"/>
+
+  <text x="360" y="52" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="28" font-weight="700" fill="#151a24">Oh My Clipboard 설치</text>
+  <text x="360" y="82" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="15" fill="#4e5969">왼쪽 앱을 오른쪽 Applications 폴더로 드래그하세요.</text>
+
+  <path d="M272 160 H448" fill="none" stroke="#2f66d0" stroke-width="4" stroke-linecap="round"/>
+  <path d="M448 160 l-18 -12 v24 z" fill="#2f66d0"/>
+  <text x="360" y="145" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="14" font-weight="600" fill="#2f66d0">Drag to install</text>
+
+  <rect x="54" y="288" width="612" height="124" rx="18" fill="#ffffff" stroke="#d9deea"/>
+  <text x="86" y="325" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="18" font-weight="700" fill="#151a24">처음 실행할 때 macOS 보안 경고가 나오면</text>
+
+  <text x="86" y="356" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="15" fill="#313947">1. 응용 프로그램에서 Oh My Clipboard를 한 번 실행합니다.</text>
+  <text x="86" y="382" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="15" fill="#313947">2. 시스템 설정 → 개인정보 보호 및 보안 → 보안으로 이동합니다.</text>
+  <text x="86" y="408" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="15" fill="#313947">3. “Oh My Clipboard 그래도 열기” 버튼을 선택하면 사용할 수 있습니다.</text>
+
+  <rect x="518" y="22" width="148" height="30" rx="15" fill="#eef3ff" stroke="#c7d6ff"/>
+  <text x="592" y="43" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif" font-size="13" font-weight="600" fill="#2f66d0">Unsigned macOS app</text>
+</svg>
